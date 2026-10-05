@@ -5,94 +5,183 @@
   <div class="container">
     <%- include('partials/messages') %>
 
-    <!-- Hero section -->
-    <section class="hero" id="hero-section">
-      <div class="hero-content">
-        <h1 class="hero-title">
-          Welcome to <span class="brand-highlight">StockPilot</span>
-        </h1>
-        <p class="hero-subtitle">
-          Your simple, powerful inventory management system.
-          Track items, manage suppliers, and keep stock levels in check — all in one place.
-        </p>
-        <div class="hero-actions">
+    <!-- Hero / Welcome banner -->
+    <div class="page-header" style="margin-bottom: var(--sp-lg);">
+      <div>
+        <h1 class="page-title">
           <% if (typeof currentUser !== 'undefined' && currentUser) { %>
-            <a href="/items" class="btn btn-primary btn-lg">View Inventory</a>
-            <a href="/items/new" class="btn btn-outline btn-lg">Add New Item</a>
+            Welcome back, <span class="brand-highlight"><%= currentUser.name %></span>
           <% } else { %>
-            <a href="/auth/register" class="btn btn-primary btn-lg">Get Started</a>
-            <a href="/auth/login" class="btn btn-outline btn-lg">Login</a>
+            Welcome to <span class="brand-highlight">StockPilot</span>
           <% } %>
+        </h1>
+        <p class="text-muted">Real-time inventory overview, low-stock warnings, and transaction logs</p>
+      </div>
+
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+        <div class="btn-group">
+          <a href="/items/new" class="btn btn-primary">+ Add Item</a>
+          <a href="/transactions/new" class="btn btn-success">+ Record Movement</a>
+          <a href="/suppliers/new" class="btn btn-outline">+ Add Supplier</a>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Summary Statistics Cards -->
+    <div class="hero-cards" style="margin-bottom: var(--sp-2xl);">
+      <div class="stat-card" id="stat-total-items">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <span class="stat-value"><%= typeof totalItems !== 'undefined' ? totalItems : 0 %></span>
+          <span class="stat-label">Total Items</span>
         </div>
       </div>
 
-      <!-- Decorative stats preview cards -->
-      <div class="hero-cards">
-        <div class="stat-card" id="stat-total-items">
-          <div class="stat-icon">📦</div>
-          <div class="stat-info">
-            <span class="stat-value">—</span>
-            <span class="stat-label">Total Items</span>
-          </div>
-        </div>
-        <div class="stat-card" id="stat-low-stock">
-          <div class="stat-icon">⚠️</div>
-          <div class="stat-info">
-            <span class="stat-value">—</span>
-            <span class="stat-label">Low Stock</span>
-          </div>
-        </div>
-        <div class="stat-card" id="stat-suppliers">
-          <div class="stat-icon">🏭</div>
-          <div class="stat-info">
-            <span class="stat-value">—</span>
-            <span class="stat-label">Suppliers</span>
-          </div>
-        </div>
-        <div class="stat-card" id="stat-stock-value">
-          <div class="stat-icon">💰</div>
-          <div class="stat-info">
-            <span class="stat-value">—</span>
-            <span class="stat-label">Stock Value</span>
-          </div>
+      <div class="stat-card" id="stat-low-stock">
+        <div class="stat-icon" style="color: var(--clr-warning);">⚠️</div>
+        <div class="stat-info">
+          <span class="stat-value"><%= typeof lowStockItems !== 'undefined' ? lowStockItems.length : 0 %></span>
+          <span class="stat-label">Low Stock</span>
         </div>
       </div>
-    </section>
 
-    <!-- Feature highlights -->
+      <div class="stat-card" id="stat-suppliers">
+        <div class="stat-icon">🏭</div>
+        <div class="stat-info">
+          <span class="stat-value"><%= typeof totalSuppliers !== 'undefined' ? totalSuppliers : 0 %></span>
+          <span class="stat-label">Suppliers</span>
+        </div>
+      </div>
+
+      <div class="stat-card" id="stat-stock-value">
+        <div class="stat-icon" style="color: var(--clr-success);">💰</div>
+        <div class="stat-info">
+          <span class="stat-value">$<%= typeof totalStockValue !== 'undefined' ? totalStockValue.toFixed(2) : '0.00' %></span>
+          <span class="stat-label">Stock Value</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Content Columns: Low Stock & Recent Transactions -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-xl); margin-bottom: var(--sp-2xl);">
+      <!-- Low Stock Alert Card & Table -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">⚠️ Low-Stock Alerts</h2>
+          <a href="/items" class="btn btn-outline btn-sm">View All Items</a>
+        </div>
+
+        <% if (typeof lowStockItems !== 'undefined' && lowStockItems && lowStockItems.length > 0) { %>
+          <div class="table-wrapper">
+            <table class="table" id="low-stock-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Stock</th>
+                  <th>Reorder Level</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% lowStockItems.forEach((it) => { %>
+                  <tr data-quantity="<%= it.quantity %>" data-reorder="<%= it.reorderLevel %>" class="low-stock">
+                    <td>
+                      <a href="/items/<%= it._id %>" style="font-weight: var(--fw-semibold);">
+                        <%= it.name %>
+                      </a>
+                    </td>
+                    <td style="color: var(--clr-warning); font-weight: var(--fw-bold);">
+                      <%= it.quantity %>
+                    </td>
+                    <td><%= it.reorderLevel %></td>
+                    <td class="text-right">
+                      <a href="/transactions/new?item=<%= it._id %>" class="btn btn-success btn-sm">+ Restock</a>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="empty-state" style="padding: var(--sp-lg);">
+            <p>✅ All items have sufficient stock levels.</p>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Recent Transactions Card & Table -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">🔄 Recent Stock Movements</h2>
+          <a href="/transactions" class="btn btn-outline btn-sm">All Transactions</a>
+        </div>
+
+        <% if (typeof recentTransactions !== 'undefined' && recentTransactions && recentTransactions.length > 0) { %>
+          <div class="table-wrapper">
+            <table class="table" id="recent-transactions">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Type</th>
+                  <th>Quantity</th>
+                  <th>User</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recentTransactions.forEach((tx) => { %>
+                  <tr>
+                    <td>
+                      <% if (tx.item) { %>
+                        <a href="/items/<%= tx.item._id %>" style="font-weight: var(--fw-semibold);">
+                          <%= tx.item.name %>
+                        </a>
+                      <% } else { %>
+                        <span class="text-muted">[Deleted]</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (tx.type === 'IN') { %>
+                        <span class="badge badge-in">IN</span>
+                      <% } else { %>
+                        <span class="badge badge-out">OUT</span>
+                      <% } %>
+                    </td>
+                    <td style="font-weight: var(--fw-bold);">
+                      <%= tx.type === 'IN' ? '+' : '-' %><%= tx.quantity %>
+                    </td>
+                    <td><%= tx.user ? tx.user.name : '—' %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="empty-state" style="padding: var(--sp-lg);">
+            <p>No transactions recorded yet.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Quick Navigation / Feature Highlights -->
     <section class="features" id="features-section">
-      <h2 class="section-title">Everything you need</h2>
+      <h2 class="section-title">StockPilot Modules</h2>
       <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🔍</div>
-          <h3>Live Search</h3>
-          <p>Find any item instantly with real-time Ajax-powered search.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>Dashboard</h3>
-          <p>See stock levels, low-stock alerts, and recent activity at a glance.</p>
-        </div>
-        <div class="feature-card">
+        <a href="/items" class="feature-card" style="text-decoration: none;">
+          <div class="feature-icon">📦</div>
+          <h3>Inventory Items</h3>
+          <p>Browse, search, edit, and organize all stock products with SKU and pricing.</p>
+        </a>
+        <a href="/transactions" class="feature-card" style="text-decoration: none;">
           <div class="feature-icon">📥</div>
-          <h3>Stock Tracking</h3>
-          <p>Record stock in and stock out with full transaction history.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🏷️</div>
-          <h3>Manage Items</h3>
-          <p>Add, edit, and organise items with images and rich descriptions.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🤝</div>
-          <h3>Suppliers</h3>
-          <p>Keep supplier details linked to every product you stock.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔒</div>
-          <h3>Secure Access</h3>
-          <p>Session-based authentication with encrypted passwords.</p>
-        </div>
+          <h3>Stock Transactions</h3>
+          <p>Audit trail of all inbound receiving and outbound dispatch movements.</p>
+        </a>
+        <a href="/suppliers" class="feature-card" style="text-decoration: none;">
+          <div class="feature-icon">🏭</div>
+          <h3>Suppliers Directory</h3>
+          <p>Manage vendors, contact information, and supplied inventory catalogs.</p>
+        </a>
       </div>
     </section>
   </div>

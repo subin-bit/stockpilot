@@ -1,11 +1,13 @@
 // controllers/itemController.js — Controller for Item CRUD operations
 // Handles listing, filtering, creating, viewing, updating, and deleting inventory items
-// with image upload handling and sanitized rich-text description support.
+// with image uploads, Quill WYSIWYG descriptions, supplier links, and stock movement logs.
 
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
+const Supplier = require('../models/Supplier');
+const StockTransaction = require('../models/StockTransaction');
 
 // Directory for uploaded item images
 const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads');
@@ -47,8 +49,8 @@ const index = async (req, res) => {
       filter.category = selectedCategory;
     }
 
-    // Fetch items matching filter, newest first
-    const items = await Item.find(filter).sort({ createdAt: -1 });
+    // Fetch items matching filter, newest first, populated with supplier
+    const items = await Item.find(filter).populate('supplier', 'name').sort({ createdAt: -1 });
 
     // Fetch unique categories for the filter dropdown
     const categories = await Item.distinct('category');
@@ -66,16 +68,23 @@ const index = async (req, res) => {
 };
 
 // GET /items/new — Show form to create a new item
-const showCreate = (req, res) => {
-  res.render('items/new', {
-    title: 'Add New Item — StockPilot',
-    item: null
-  });
+const showCreate = async (req, res) => {
+  try {
+    const suppliers = await Supplier.find().sort({ name: 1 });
+    res.render('items/new', {
+      title: 'Add New Item — StockPilot',
+      item: null,
+      suppliers
+    });
+  } catch (err) {
+    console.error('Error loading new item form:', err);
+    res.status(500).render('errors/500', { title: 'Server Error — StockPilot' });
+  }
 };
 
 // POST /items — Store a new item in the database
 const store = async (req, res) => {
-  const { name, sku, category, unitPrice, quantity, reorderLevel, description } = req.body;
+  const { name, sku, category, unitPrice, quantity, reorderLevel, description, supplier } = req.body;
   let imagePath = '';
 
   // Process optional image upload
@@ -96,7 +105,7 @@ const store = async (req, res) => {
       return req.session.save(() => res.redirect('/items/new'));
     }
 
-    // Build unique filename: Date.now() + '-' + original name with spaces replaced
+    // Build unique filename
     const filename = `${Date.now()}-${imageFile.name.replace(/\s+/g, '_')}`;
     const destination = path.join(UPLOADS_DIR, filename);
 
@@ -111,6 +120,9 @@ const store = async (req, res) => {
     }
   }
 
+  // Parse supplier ID
+  const supplierId = (supplier && mongoose.Types.ObjectId.isValid(supplier)) ? supplier : null;
+
   try {
     const item = new Item({
       name,
@@ -121,6 +133,7 @@ const store = async (req, res) => {
       reorderLevel,
       description: sanitizeDescription(description),
       image: imagePath,
+      supplier: supplierId,
       createdBy: req.session.userId
     });
 
@@ -141,7 +154,7 @@ const store = async (req, res) => {
   }
 };
 
-// GET /items/:id — Show a single item's details
+// GET /items/:id — Show a single item's details (with supplier and last 10 transactions)
 const show = async (req, res) => {
   const { id } = req.params;
 
@@ -150,15 +163,22 @@ const show = async (req, res) => {
   }
 
   try {
-    const item = await Item.findById(id);
+    const item = await Item.findById(id).populate('supplier');
 
     if (!item) {
       return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
     }
 
+    // Fetch the last 10 transactions for this item
+    const transactions = await StockTransaction.find({ item: id })
+      .populate('user', 'name')
+      .sort({ createdAt: -1 })
+      .limit(10);
+
     res.render('items/show', {
       title: `${item.name} — StockPilot`,
-      item
+      item,
+      transactions
     });
   } catch (err) {
     console.error('Error loading item:', err);
@@ -181,9 +201,12 @@ const edit = async (req, res) => {
       return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
     }
 
+    const suppliers = await Supplier.find().sort({ name: 1 });
+
     res.render('items/edit', {
       title: `Edit ${item.name} — StockPilot`,
-      item
+      item,
+      suppliers
     });
   } catch (err) {
     console.error('Error loading item for edit:', err);
@@ -199,7 +222,7 @@ const update = async (req, res) => {
     return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
   }
 
-  const { name, sku, category, unitPrice, quantity, reorderLevel, description } = req.body;
+  const { name, sku, category, unitPrice, quantity, reorderLevel, description, supplier } = req.body;
 
   try {
     const existingItem = await Item.findById(id);
@@ -207,7 +230,7 @@ const update = async (req, res) => {
       return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
     }
 
-    let imagePath = existingItem.image; // default: keep existing image
+    let imagePath = existingItem.image;
 
     // Process new image upload if provided
     if (req.files && req.files.image) {
@@ -232,7 +255,7 @@ const update = async (req, res) => {
 
       await imageFile.mv(destination);
 
-      // If item already had an image, remove old image file
+      // Remove old image file if one existed
       if (existingItem.image) {
         const oldFilePath = path.join(__dirname, '..', 'public', existingItem.image);
         fs.unlink(oldFilePath, () => {});
@@ -240,6 +263,8 @@ const update = async (req, res) => {
 
       imagePath = `/uploads/${filename}`;
     }
+
+    const supplierId = (supplier && mongoose.Types.ObjectId.isValid(supplier)) ? supplier : null;
 
     const updatedItem = await Item.findByIdAndUpdate(
       id,
@@ -251,7 +276,8 @@ const update = async (req, res) => {
         quantity,
         reorderLevel,
         description: sanitizeDescription(description),
-        image: imagePath
+        image: imagePath,
+        supplier: supplierId
       },
       {
         runValidators: true,
@@ -283,7 +309,7 @@ const destroy = async (req, res) => {
       return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
     }
 
-    // Delete image file from public/uploads if one exists (ignore error if file is missing)
+    // Delete image file from public/uploads if one exists
     if (item.image) {
       const filePath = path.join(__dirname, '..', 'public', item.image);
       fs.unlink(filePath, (err) => {

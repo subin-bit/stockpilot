@@ -122,16 +122,16 @@ See table below.
 | GET | `/items/:id/edit` | itemController.edit | Yes | done |
 | POST | `/items/:id/update` | itemController.update | Yes | done |
 | POST | `/items/:id/delete` | itemController.destroy | Yes | done |
-| GET | `/suppliers` | supplierController.index | Yes | planned |
-| GET | `/suppliers/new` | supplierController.showCreate | Yes | planned |
-| POST | `/suppliers` | supplierController.store | Yes | planned |
-| GET | `/suppliers/:id` | supplierController.show | Yes | planned |
-| GET | `/suppliers/:id/edit` | supplierController.edit | Yes | planned |
-| POST | `/suppliers/:id/update` | supplierController.update | Yes | planned |
-| POST | `/suppliers/:id/delete` | supplierController.destroy | Yes | planned |
-| GET | `/transactions` | transactionController.index | Yes | planned |
-| GET | `/transactions/new` | transactionController.showCreate | Yes | planned |
-| POST | `/transactions` | transactionController.store | Yes | planned |
+| GET | `/suppliers` | supplierController.index | Yes | done |
+| GET | `/suppliers/new` | supplierController.showCreate | Yes | done |
+| POST | `/suppliers` | supplierController.store | Yes | done |
+| GET | `/suppliers/:id` | supplierController.show | Yes | done |
+| GET | `/suppliers/:id/edit` | supplierController.edit | Yes | done |
+| POST | `/suppliers/:id/update` | supplierController.update | Yes | done |
+| POST | `/suppliers/:id/delete` | supplierController.destroy | Yes | done |
+| GET | `/transactions` | transactionController.index | Yes | done |
+| GET | `/transactions/new` | transactionController.showCreate | Yes | done |
+| POST | `/transactions` | transactionController.store | Yes | done |
 | GET | `/api/items?search=` | apiController.searchItems | Yes (JSON 401) | planned |
 | GET | `/api/items/:id` | apiController.getItem | Yes (JSON 401) | planned |
 | GET | `/api/stats` | apiController.getStats | Yes (JSON 401) | planned |
@@ -141,14 +141,12 @@ See table below.
 
 ## Models
 
-_(Created in later phases)_
-
 | Model | Phase | Fields | Details |
 |---|---|---|---|
 | User | 1 | name, email, password | Email unique/lowercase/trimmed; bcrypt pre-save hash; minlength 6 |
 | Item | 2 | name, sku, category, unitPrice, quantity, reorderLevel, description, image, supplier, createdBy, timestamps | SKU unique/uppercase/trimmed; unitPrice min 0; quantity & reorderLevel defaults; virtual isLowStock |
-| Supplier | 4 | name, email, phone, address, timestamps | Planned |
-| StockTransaction | 4 | item, type (IN/OUT), quantity, note, user, timestamps | Planned |
+| Supplier | 4 | name, email, phone, address, timestamps | Vendor registry; deletion restricted when linked items exist |
+| StockTransaction | 4 | item, type (IN/OUT), quantity, note, user, timestamps | Immutable audit log; triggers atomic $inc quantity updates with rollback |
 
 ---
 
@@ -252,7 +250,7 @@ _(Created in later phases)_
 | 1 — Authentication | ✅ Done | User model with bcrypt pre-save hook; authController (register, login, logout); requireLogin & redirectIfLoggedIn guards; views with flash messages & old input persistence. |
 | 2 — Items CRUD | ✅ Done | Item model with uppercase SKU & isLowStock virtual; itemController full CRUD; requireLogin protected routes; category filtering; shared _form partial with validation flash and old value refilling. |
 | 3 — Image upload + WYSIWYG | ✅ Done | express-fileupload integration; 2 MB limit; unique filename in public/uploads; image cleanup on delete; Quill WYSIWYG editor with server-side script tag sanitization; thumbnail and detail views. |
-| 4 — Suppliers, transactions, dashboard | ⬜ Planned | |
+| 4 — Suppliers, transactions, dashboard | ✅ Done | Supplier CRUD with item deletion restraint; StockTransaction model & log; atomic $inc stock updates & OUT quantity guard; dashboard metrics (valuation, low stock, recent txs). |
 | 5 — Browser JS (DOM, events, ES6) | ⬜ Planned | |
 | 6 — jQuery + Ajax | ⬜ Planned | |
 | 7 — Error handling + deployment | ⬜ Planned | |

@@ -1,0 +1,79 @@
+<!-- views/transactions/index.ejs — Stock transactions history log -->
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Stock Movements</h1>
+        <p class="text-muted">Audit log of all inbound and outbound stock transactions</p>
+      </div>
+      <div>
+        <a href="/transactions/new" class="btn btn-primary">+ Record Stock Movement</a>
+      </div>
+    </div>
+
+    <%- include('../partials/messages') %>
+
+    <% if (transactions && transactions.length > 0) { %>
+      <div class="table-wrapper">
+        <table class="table" id="transactions-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Item</th>
+              <th>SKU</th>
+              <th>Movement</th>
+              <th>Quantity</th>
+              <th>Recorded By</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% transactions.forEach((tx) => { %>
+              <tr>
+                <td><%= new Date(tx.createdAt).toLocaleString() %></td>
+                <td>
+                  <% if (tx.item) { %>
+                    <a href="/items/<%= tx.item._id %>" style="font-weight: var(--fw-semibold);">
+                      <%= tx.item.name %>
+                    </a>
+                  <% } else { %>
+                    <span class="text-muted">[Deleted Item]</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (tx.item) { %>
+                    <code><%= tx.item.sku %></code>
+                  <% } else { %>
+                    —
+                  <% } %>
+                </td>
+                <td>
+                  <% if (tx.type === 'IN') { %>
+                    <span class="badge badge-in">Stock IN (Receive)</span>
+                  <% } else { %>
+                    <span class="badge badge-out">Stock OUT (Dispatch)</span>
+                  <% } %>
+                </td>
+                <td style="font-weight: var(--fw-bold);">
+                  <%= tx.type === 'IN' ? '+' : '-' %><%= tx.quantity %>
+                </td>
+                <td><%= tx.user ? tx.user.name : 'System' %></td>
+                <td><%= tx.note || '—' %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="card empty-state">
+        <p>No stock transactions recorded yet.</p>
+        <a href="/transactions/new" class="btn btn-primary">+ Record First Stock Movement</a>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

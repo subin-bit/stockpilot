@@ -75,16 +75,21 @@ const { requireLogin } = require('./middleware/auth');
 // Auth routes (register, login, logout)
 app.use('/auth', require('./routes/authRoutes'));
 
+// Dashboard controller
+const dashboardController = require('./controllers/dashboardController');
+
 // Home / dashboard route (protected by requireLogin)
-app.get('/', requireLogin, (req, res) => {
-  res.render('home', { title: 'Dashboard — StockPilot' });
-});
+app.get('/', requireLogin, dashboardController.index);
 
 // Items routes (CRUD)
 app.use('/items', require('./routes/itemRoutes'));
 
-// Phase 4: app.use('/suppliers', require('./routes/supplierRoutes'));
-// Phase 4: app.use('/transactions', require('./routes/transactionRoutes'));
+// Suppliers routes (CRUD)
+app.use('/suppliers', require('./routes/supplierRoutes'));
+
+// Stock transactions routes
+app.use('/transactions', require('./routes/transactionRoutes'));
+
 // Phase 6: app.use('/api', require('./routes/apiRoutes'));
 
 // ─── 404 handler (must be the LAST route) ───────────────────────

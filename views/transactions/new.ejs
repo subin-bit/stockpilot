@@ -1,0 +1,83 @@
+<!-- views/transactions/new.ejs — Record stock movement form -->
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<main class="main-content">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Record Stock Movement</h1>
+        <p class="text-muted">Receive new inventory or dispatch stock with automatic quantity recalculation</p>
+      </div>
+      <div>
+        <a href="/transactions" class="btn btn-outline">Back to Transactions</a>
+      </div>
+    </div>
+
+    <%- include('../partials/messages') %>
+
+    <div class="card" style="max-width: 650px; margin: 0 auto;">
+      <form action="/transactions" method="POST" id="transaction-form" novalidate>
+        <div class="form-group">
+          <label for="item" class="form-label">Inventory Item *</label>
+          <select name="item" id="item" class="form-control" required>
+            <option value="">-- Select an item --</option>
+            <% items.forEach((it) => { %>
+              <%
+                const isSelected = (typeof old !== 'undefined' && old.item === it._id.toString()) ||
+                                   (preselectedItemId === it._id.toString());
+              %>
+              <option value="<%= it._id %>" <%= isSelected ? 'selected' : '' %>>
+                <%= it.name %> (SKU: <%= it.sku %>) — Available Stock: <%= it.quantity %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="type" class="form-label">Movement Type *</label>
+            <select name="type" id="type" class="form-control" required>
+              <% const selectedType = typeof old !== 'undefined' && old.type ? old.type : 'IN'; %>
+              <option value="IN" <%= selectedType === 'IN' ? 'selected' : '' %>>Stock IN (+ Receive inventory)</option>
+              <option value="OUT" <%= selectedType === 'OUT' ? 'selected' : '' %>>Stock OUT (- Dispatch / Sell)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="quantity" class="form-label">Units to Move *</label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              class="form-control"
+              placeholder="e.g. 10"
+              min="1"
+              value="<%= typeof old !== 'undefined' && old.quantity ? old.quantity : '1' %>"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="note" class="form-label">Note / Reference (Optional)</label>
+          <input
+            type="text"
+            id="note"
+            name="note"
+            class="form-control"
+            placeholder="e.g. PO-10492, supplier delivery, damage write-off..."
+            value="<%= typeof old !== 'undefined' && old.note ? old.note : '' %>"
+          >
+        </div>
+
+        <div class="btn-group mt-lg" style="justify-content: flex-end;">
+          <a href="/transactions" class="btn btn-outline">Cancel</a>
+          <button type="submit" class="btn btn-primary">Record Movement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>
