@@ -18,7 +18,10 @@ const register = async (req, res) => {
     await user.save();
 
     req.session.success = 'Registration successful! Please log in.';
-    return res.redirect('/auth/login');
+    req.session.save((err) => {
+      if (err) console.error('Session save error:', err);
+      return res.redirect('/auth/login');
+    });
   } catch (error) {
     const errors = [];
 
@@ -37,7 +40,10 @@ const register = async (req, res) => {
     // Persist flash errors and old input (NEVER persist password)
     req.session.errors = errors;
     req.session.formData = { name, email };
-    return res.redirect('/auth/register');
+    req.session.save((err) => {
+      if (err) console.error('Session save error:', err);
+      return res.redirect('/auth/register');
+    });
   }
 };
 
@@ -57,23 +63,26 @@ const login = async (req, res) => {
     if (!user) {
       req.session.errors = ['Invalid email or password'];
       req.session.formData = { email };
-      return res.redirect('/auth/login');
+      return req.session.save(() => res.redirect('/auth/login'));
     }
 
     const isMatch = await bcrypt.compare(password || '', user.password);
     if (!isMatch) {
       req.session.errors = ['Invalid email or password'];
       req.session.formData = { email };
-      return res.redirect('/auth/login');
+      return req.session.save(() => res.redirect('/auth/login'));
     }
 
-    // Establish session
+    // Establish session and save to store before redirecting
     req.session.userId = user._id;
-    return res.redirect('/');
+    req.session.save((err) => {
+      if (err) console.error('Session save error:', err);
+      return res.redirect('/');
+    });
   } catch (error) {
     req.session.errors = ['An error occurred during login. Please try again.'];
     req.session.formData = { email };
-    return res.redirect('/auth/login');
+    return req.session.save(() => res.redirect('/auth/login'));
   }
 };
 

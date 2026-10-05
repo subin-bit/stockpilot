@@ -72,7 +72,9 @@ app.get('/', requireLogin, (req, res) => {
   res.render('home', { title: 'Dashboard — StockPilot' });
 });
 
-// Phase 2: app.use('/items', require('./routes/itemRoutes'));
+// Items routes (CRUD)
+app.use('/items', require('./routes/itemRoutes'));
+
 // Phase 4: app.use('/suppliers', require('./routes/supplierRoutes'));
 // Phase 4: app.use('/transactions', require('./routes/transactionRoutes'));
 // Phase 6: app.use('/api', require('./routes/apiRoutes'));

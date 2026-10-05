@@ -115,13 +115,13 @@ See table below.
 | GET | `/auth/login` | authController.showLogin | No (redirectIfLoggedIn) | done |
 | POST | `/auth/login` | authController.login | No | done |
 | GET | `/auth/logout` | authController.logout | Yes | done |
-| GET | `/items` | itemController.index | Yes | planned |
-| GET | `/items/new` | itemController.showCreate | Yes | planned |
-| POST | `/items` | itemController.store | Yes | planned |
-| GET | `/items/:id` | itemController.show | Yes | planned |
-| GET | `/items/:id/edit` | itemController.edit | Yes | planned |
-| POST | `/items/:id/update` | itemController.update | Yes | planned |
-| POST | `/items/:id/delete` | itemController.destroy | Yes | planned |
+| GET | `/items` | itemController.index | Yes | done |
+| GET | `/items/new` | itemController.showCreate | Yes | done |
+| POST | `/items` | itemController.store | Yes | done |
+| GET | `/items/:id` | itemController.show | Yes | done |
+| GET | `/items/:id/edit` | itemController.edit | Yes | done |
+| POST | `/items/:id/update` | itemController.update | Yes | done |
+| POST | `/items/:id/delete` | itemController.destroy | Yes | done |
 | GET | `/suppliers` | supplierController.index | Yes | planned |
 | GET | `/suppliers/new` | supplierController.showCreate | Yes | planned |
 | POST | `/suppliers` | supplierController.store | Yes | planned |
@@ -146,7 +146,7 @@ _(Created in later phases)_
 | Model | Phase | Fields | Details |
 |---|---|---|---|
 | User | 1 | name, email, password | Email unique/lowercase/trimmed; bcrypt pre-save hash; minlength 6 |
-| Item | 2 | name, sku, category, unitPrice, quantity, reorderLevel, description, image, supplier, createdBy, timestamps | Planned |
+| Item | 2 | name, sku, category, unitPrice, quantity, reorderLevel, description, image, supplier, createdBy, timestamps | SKU unique/uppercase/trimmed; unitPrice min 0; quantity & reorderLevel defaults; virtual isLowStock |
 | Supplier | 4 | name, email, phone, address, timestamps | Planned |
 | StockTransaction | 4 | item, type (IN/OUT), quantity, note, user, timestamps | Planned |
 
@@ -237,7 +237,7 @@ _(Created in later phases)_
 |---|---|---|
 | 0 — Setup & MVC skeleton | ✅ Done | Express + EJS + session + Mongo skeleton; middleware stubs; styled home page with navbar/footer/partials; design system CSS; PROJECT_CONTEXT.md created. |
 | 1 — Authentication | ✅ Done | User model with bcrypt pre-save hook; authController (register, login, logout); requireLogin & redirectIfLoggedIn guards; views with flash messages & old input persistence. |
-| 2 — Items CRUD | ⬜ Planned | |
+| 2 — Items CRUD | ✅ Done | Item model with uppercase SKU & isLowStock virtual; itemController full CRUD; requireLogin protected routes; category filtering; shared _form partial with validation flash and old value refilling. |
 | 3 — Image upload + WYSIWYG | ⬜ Planned | |
 | 4 — Suppliers, transactions, dashboard | ⬜ Planned | |
 | 5 — Browser JS (DOM, events, ES6) | ⬜ Planned | |
