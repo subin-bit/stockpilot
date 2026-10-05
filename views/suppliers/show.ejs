@@ -11,7 +11,7 @@
       <div class="btn-group">
         <a href="/suppliers" class="btn btn-outline">Back to Suppliers</a>
         <a href="/suppliers/<%= supplier._id %>/edit" class="btn btn-primary">Edit Supplier</a>
-        <form action="/suppliers/<%= supplier._id %>/delete" method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this supplier?');">
+        <form action="/suppliers/<%= supplier._id %>/delete" method="POST" class="inline-form delete-form">
           <button type="submit" class="btn btn-danger">Delete</button>
         </form>
       </div>

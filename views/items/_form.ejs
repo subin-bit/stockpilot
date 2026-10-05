@@ -134,6 +134,11 @@
     class="form-control form-control-file"
     accept="image/*"
   >
+  <!-- Client-side preview container for selected image -->
+  <div id="image-preview-container" class="image-preview" style="display: none; margin-top: var(--sp-sm);">
+    <p class="form-hint" style="margin-bottom: var(--sp-xs);">Selected image preview:</p>
+    <img id="image-preview" alt="Image preview" class="thumb" style="width: 80px; height: 80px; object-fit: cover;">
+  </div>
   <p class="form-hint">Allowed formats: JPG, PNG, GIF, WebP (max 2 MB). Note: image must be reselected if form encounters validation errors.</p>
 </div>
 

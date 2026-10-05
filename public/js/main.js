@@ -1,22 +1,54 @@
-// public/js/main.js — StockPilot client-side JavaScript
-// Phase 0: only the navbar toggle. Phase 5 adds more features.
+// public/js/main.js — StockPilot Client-Side Master Orchestrator
+// Coordinates: Mobile navbar, UI enhancements, DOM manipulations, and Form Validations.
 
 'use strict';
 
-// ─── Navbar hamburger toggle (mobile) ───────────────────────────
-const navToggle = document.getElementById('navbar-toggle');
-const navMenu   = document.getElementById('navbar-menu');
+document.addEventListener('DOMContentLoaded', () => {
+  // ─── 1. Navbar Hamburger Toggle (Mobile View) ───────────────────
+  const navToggle = document.getElementById('navbar-toggle');
+  const navMenu   = document.getElementById('navbar-menu');
 
-if (navToggle && navMenu) {
-  navToggle.addEventListener('click', () => {
-    navMenu.classList.toggle('open');
-  });
-}
+  if (navToggle && navMenu) {
+    navToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('open');
+    });
+  }
 
-// ─── Flash message close buttons ────────────────────────────────
-// Attach click handlers to message close buttons
-document.querySelectorAll('.msg-close').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    btn.parentElement.remove();
-  });
+  // ─── 2. Initialize UI Features (from ui.js) ─────────────────────
+  if (window.StockPilotUI) {
+    const {
+      initFlashMessages,
+      initDeleteConfirmation,
+      applyLowStockHighlight,
+      initClientCategoryFilter,
+      initSortableTables,
+      initDashboardStockItems,
+      initImagePreview
+    } = window.StockPilotUI;
+
+    initFlashMessages();
+    initDeleteConfirmation();
+    applyLowStockHighlight();
+    initClientCategoryFilter();
+    initSortableTables();
+    initDashboardStockItems();
+    initImagePreview();
+  }
+
+  // ─── 3. Initialize Client-Side Form Validations (from validation.js)
+  if (window.StockPilotValidation) {
+    const {
+      initRegisterValidation,
+      initLoginValidation,
+      initItemValidation,
+      initSupplierValidation,
+      initTransactionValidation
+    } = window.StockPilotValidation;
+
+    initRegisterValidation();
+    initLoginValidation();
+    initItemValidation();
+    initSupplierValidation();
+    initTransactionValidation();
+  }
 });

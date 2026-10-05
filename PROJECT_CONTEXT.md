@@ -242,6 +242,46 @@ See table below.
 
 ---
 
+---
+
+## Browser JavaScript Architecture (Phase 5)
+
+### Files in `public/js/`
+- **`public/js/validation.js`**:
+  - ES6 arrow functions with default parameters (`isNotEmpty`, `isMinLength`, `isValidEmail`, `isNonNegativeNumber`, `isPositiveInteger`).
+  - Object destructuring from `Object.fromEntries(new FormData(form))`.
+  - Accessible error feedback: sets `aria-invalid="true"` and inserts `<div class="field-error">` via `document.createElement`.
+  - Dedicated initializers: `initRegisterValidation`, `initLoginValidation`, `initItemValidation`, `initSupplierValidation`, `initTransactionValidation`.
+  - Exported to `window.StockPilotValidation`.
+- **`public/js/ui.js`**:
+  - **Event Delegation**: Single submit listener on `document.body` for `.delete-form, form[action*="/delete"]` using `confirm()`.
+  - **Low-Stock Highlighting**: `applyLowStockHighlight()` inspecting `data-quantity` and `data-reorder` to add `.low-stock`.
+  - **Category Filter**: `initClientCategoryFilter()` utilizing ES6 `Set` for deduplication and `Map` for frequency counts, filtering rows without page reloads.
+  - **Table Sorting**: `initSortableTables()` on `th.sortable`, uses spread operator `[...tbody.rows]` and numeric/string `sort()`.
+  - **Flash Auto-Dismiss**: `initFlashMessages()` auto-hiding `.msg` alerts after 4s with smooth CSS opacity transition.
+  - **ES6 Class**: `StockItem` class (`constructor`, `isLow()`, getter `status`, `toRow()`) used in `initDashboardStockItems()` with `Array.find` and `Array.findIndex` to generate an alert banner.
+  - **Image Preview**: `initImagePreview()` generating instant local previews via `URL.createObjectURL` and cleanup via `URL.revokeObjectURL`.
+  - Exported to `window.StockPilotUI`.
+- **`public/js/main.js`**:
+  - DOMContentLoaded master orchestrator initializing mobile navbar toggle, `StockPilotUI`, and `StockPilotValidation`.
+
+### Script Loading & Execution
+- In `views/partials/header.ejs`: `<script src="/js/validation.js" defer></script>`, `<script src="/js/ui.js" defer></script>`, `<script src="/js/main.js" defer></script>`.
+- Defer ensures non-blocking downloads and execution in document order once HTML parsing is complete.
+
+### `data-*` Attributes Used
+- `data-quantity`: Holds raw quantity on `<tr>` for highlight and sorting.
+- `data-reorder`: Holds reorder threshold on `<tr>` for stock warning evaluation.
+- `data-category`: Holds category text on `<tr>` for client-side category filtering.
+- `data-type`: Specifies data type (`text` | `number`) on `th.sortable`.
+
+### Targeted Element IDs
+- Forms: `#register-form`, `#login-form`, `#item-form`, `#supplier-form`, `#transaction-form`.
+- UI & Tables: `#items-table`, `#client-category-filter`, `#low-stock-table`, `#stock-summary-banner`, `#recent-transactions`.
+- Image Upload: `#image`, `#image-preview`, `#image-preview-container`.
+
+---
+
 ## Phase Log
 
 | Phase | Status | Summary |
@@ -251,6 +291,6 @@ See table below.
 | 2 — Items CRUD | ✅ Done | Item model with uppercase SKU & isLowStock virtual; itemController full CRUD; requireLogin protected routes; category filtering; shared _form partial with validation flash and old value refilling. |
 | 3 — Image upload + WYSIWYG | ✅ Done | express-fileupload integration; 2 MB limit; unique filename in public/uploads; image cleanup on delete; Quill WYSIWYG editor with server-side script tag sanitization; thumbnail and detail views. |
 | 4 — Suppliers, transactions, dashboard | ✅ Done | Supplier CRUD with item deletion restraint; StockTransaction model & log; atomic $inc stock updates & OUT quantity guard; dashboard metrics (valuation, low stock, recent txs). |
-| 5 — Browser JS (DOM, events, ES6) | ⬜ Planned | |
+| 5 — Browser JS (DOM, events, ES6) | ✅ Done | Pure vanilla JS & ES6 (no jQuery yet); validation with ARIA & error tooltips; event delegation delete confirmation; dynamic category filter with Set & Map; table sorting with spread syntax; ES6 StockItem class; live image preview. |
 | 6 — jQuery + Ajax | ⬜ Planned | |
 | 7 — Error handling + deployment | ⬜ Planned | |
