@@ -1,8 +1,26 @@
 // controllers/itemController.js — Controller for Item CRUD operations
-// Handles listing, filtering, creating, viewing, updating, and deleting inventory items.
+// Handles listing, filtering, creating, viewing, updating, and deleting inventory items
+// with image upload handling and sanitized rich-text description support.
 
+const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const Item = require('../models/Item');
+
+// Directory for uploaded item images
+const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads');
+
+// Ensure public/uploads directory exists on startup
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// Strip <script> tags from rich-text HTML on the server to prevent basic XSS attacks
+const sanitizeDescription = (html) => {
+  if (!html) return '';
+  // Note: Outputting raw HTML carries XSS risks; this regex strips executable <script> tags for project demo purposes
+  return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+};
 
 // Helper to extract clean error messages from Mongoose or duplicate key errors
 const extractErrors = (error) => {
@@ -58,6 +76,40 @@ const showCreate = (req, res) => {
 // POST /items — Store a new item in the database
 const store = async (req, res) => {
   const { name, sku, category, unitPrice, quantity, reorderLevel, description } = req.body;
+  let imagePath = '';
+
+  // Process optional image upload
+  if (req.files && req.files.image) {
+    const imageFile = req.files.image;
+
+    // Validate mimetype
+    if (!imageFile.mimetype.startsWith('image/')) {
+      req.session.errors = ['Only image files (JPEG, PNG, GIF, WebP) are allowed.'];
+      req.session.formData = req.body;
+      return req.session.save(() => res.redirect('/items/new'));
+    }
+
+    // Validate size (max 2 MB)
+    if (imageFile.size > 2 * 1024 * 1024) {
+      req.session.errors = ['Image file size must be under 2 MB.'];
+      req.session.formData = req.body;
+      return req.session.save(() => res.redirect('/items/new'));
+    }
+
+    // Build unique filename: Date.now() + '-' + original name with spaces replaced
+    const filename = `${Date.now()}-${imageFile.name.replace(/\s+/g, '_')}`;
+    const destination = path.join(UPLOADS_DIR, filename);
+
+    try {
+      await imageFile.mv(destination);
+      imagePath = `/uploads/${filename}`;
+    } catch (uploadErr) {
+      console.error('File upload error:', uploadErr);
+      req.session.errors = ['Failed to upload image. Please try again.'];
+      req.session.formData = req.body;
+      return req.session.save(() => res.redirect('/items/new'));
+    }
+  }
 
   try {
     const item = new Item({
@@ -67,7 +119,8 @@ const store = async (req, res) => {
       unitPrice,
       quantity,
       reorderLevel,
-      description,
+      description: sanitizeDescription(description),
+      image: imagePath,
       createdBy: req.session.userId
     });
 
@@ -76,6 +129,12 @@ const store = async (req, res) => {
     req.session.success = 'Item added';
     return req.session.save(() => res.redirect('/items'));
   } catch (error) {
+    // If a file was saved but DB save failed, clean up the orphaned file
+    if (imagePath) {
+      const savedFilePath = path.join(__dirname, '..', 'public', imagePath);
+      fs.unlink(savedFilePath, () => {});
+    }
+
     req.session.errors = extractErrors(error);
     req.session.formData = req.body;
     return req.session.save(() => res.redirect('/items/new'));
@@ -143,6 +202,45 @@ const update = async (req, res) => {
   const { name, sku, category, unitPrice, quantity, reorderLevel, description } = req.body;
 
   try {
+    const existingItem = await Item.findById(id);
+    if (!existingItem) {
+      return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
+    }
+
+    let imagePath = existingItem.image; // default: keep existing image
+
+    // Process new image upload if provided
+    if (req.files && req.files.image) {
+      const imageFile = req.files.image;
+
+      // Validate mimetype
+      if (!imageFile.mimetype.startsWith('image/')) {
+        req.session.errors = ['Only image files (JPEG, PNG, GIF, WebP) are allowed.'];
+        req.session.formData = req.body;
+        return req.session.save(() => res.redirect(`/items/${id}/edit`));
+      }
+
+      // Validate size (max 2 MB)
+      if (imageFile.size > 2 * 1024 * 1024) {
+        req.session.errors = ['Image file size must be under 2 MB.'];
+        req.session.formData = req.body;
+        return req.session.save(() => res.redirect(`/items/${id}/edit`));
+      }
+
+      const filename = `${Date.now()}-${imageFile.name.replace(/\s+/g, '_')}`;
+      const destination = path.join(UPLOADS_DIR, filename);
+
+      await imageFile.mv(destination);
+
+      // If item already had an image, remove old image file
+      if (existingItem.image) {
+        const oldFilePath = path.join(__dirname, '..', 'public', existingItem.image);
+        fs.unlink(oldFilePath, () => {});
+      }
+
+      imagePath = `/uploads/${filename}`;
+    }
+
     const updatedItem = await Item.findByIdAndUpdate(
       id,
       {
@@ -152,17 +250,14 @@ const update = async (req, res) => {
         unitPrice,
         quantity,
         reorderLevel,
-        description
+        description: sanitizeDescription(description),
+        image: imagePath
       },
       {
         runValidators: true,
         new: true
       }
     );
-
-    if (!updatedItem) {
-      return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
-    }
 
     req.session.success = 'Item updated';
     return req.session.save(() => res.redirect(`/items/${updatedItem._id}`));
@@ -173,7 +268,7 @@ const update = async (req, res) => {
   }
 };
 
-// POST /items/:id/delete — Delete an item
+// POST /items/:id/delete — Delete an item and its associated image file
 const destroy = async (req, res) => {
   const { id } = req.params;
 
@@ -182,11 +277,23 @@ const destroy = async (req, res) => {
   }
 
   try {
-    const deletedItem = await Item.findByIdAndDelete(id);
+    const item = await Item.findById(id);
 
-    if (!deletedItem) {
+    if (!item) {
       return res.status(404).render('errors/404', { title: 'Item Not Found — StockPilot' });
     }
+
+    // Delete image file from public/uploads if one exists (ignore error if file is missing)
+    if (item.image) {
+      const filePath = path.join(__dirname, '..', 'public', item.image);
+      fs.unlink(filePath, (err) => {
+        if (err && err.code !== 'ENOENT') {
+          console.error('Error removing image file:', err);
+        }
+      });
+    }
+
+    await Item.findByIdAndDelete(id);
 
     req.session.success = 'Item deleted';
     return req.session.save(() => res.redirect('/items'));

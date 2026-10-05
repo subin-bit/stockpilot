@@ -1,4 +1,4 @@
-<!-- views/items/_form.ejs — Shared form partial for item creation and editing -->
+<!-- views/items/_form.ejs — Shared form partial with Image Upload and Quill WYSIWYG Editor -->
 <%
   const getVal = (field, fallback = '') => {
     if (typeof old !== 'undefined' && old[field] !== undefined) {
@@ -37,7 +37,7 @@
       required
       style="text-transform: uppercase;"
     >
-    <p class="form-hint">Unique identifier, saved in uppercase.</p>
+    <p class="form-hint">Unique identifier, automatically converted to uppercase.</p>
   </div>
 </div>
 
@@ -99,13 +99,75 @@
   </div>
 </div>
 
+<!-- Image upload field -->
 <div class="form-group">
-  <label for="description" class="form-label">Description</label>
-  <textarea
-    id="description"
-    name="description"
-    class="form-control"
-    rows="4"
-    placeholder="Enter detailed description of the item..."
-  ><%= getVal('description') %></textarea>
+  <label for="image" class="form-label">Product Image</label>
+  <% if (typeof item !== 'undefined' && item && item.image) { %>
+    <div style="display: flex; align-items: center; gap: var(--sp-md); margin-bottom: var(--sp-sm);">
+      <img src="<%= item.image %>" alt="<%= item.name %>" class="thumb" style="width: 54px; height: 54px;">
+      <span class="text-muted" style="font-size: var(--fs-xs);">Current image (upload a new file below to replace)</span>
+    </div>
+  <% } %>
+  <input
+    type="file"
+    id="image"
+    name="image"
+    class="form-control form-control-file"
+    accept="image/*"
+  >
+  <p class="form-hint">Allowed formats: JPG, PNG, GIF, WebP (max 2 MB). Note: image must be reselected if form encounters validation errors.</p>
 </div>
+
+<!-- WYSIWYG Description field -->
+<div class="form-group">
+  <label class="form-label">Description (Rich Text)</label>
+  <!-- Hidden input that submits HTML to req.body.description -->
+  <input
+    type="hidden"
+    name="description"
+    id="hidden-description"
+    value="<%= getVal('description') %>"
+  >
+  <!-- Quill editor wrapper -->
+  <div style="background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: var(--radius-sm); overflow: hidden;">
+    <div id="quill-editor" style="min-height: 160px; font-family: var(--font-family); font-size: var(--fs-base); color: var(--clr-text);"></div>
+  </div>
+</div>
+
+<!-- Initialize Quill editor script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Only initialize if Quill is loaded
+    if (typeof Quill === 'undefined') return;
+
+    const quill = new Quill('#quill-editor', {
+      theme: 'snow',
+      placeholder: 'Enter a formatted description of this inventory item...',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['clean']
+        ]
+      }
+    });
+
+    const hiddenInput = document.getElementById('hidden-description');
+
+    // Preload existing description if available
+    if (hiddenInput && hiddenInput.value) {
+      quill.root.innerHTML = hiddenInput.value;
+    }
+
+    // On form submission, sync Quill HTML content into hidden input
+    const parentForm = document.getElementById('item-form');
+    if (parentForm) {
+      parentForm.addEventListener('submit', () => {
+        const content = quill.root.innerHTML;
+        // Don't save empty paragraph tag if user left it empty
+        hiddenInput.value = (content === '<p><br></p>') ? '' : content;
+      });
+    }
+  });
+</script>

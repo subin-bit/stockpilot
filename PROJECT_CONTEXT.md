@@ -231,6 +231,19 @@ _(Created in later phases)_
 
 ---
 
+## File Uploads & WYSIWYG Specification (Phase 3)
+
+- **Upload Middleware**: `express-fileupload` registered in `index.js` with a 2 MB size limit.
+- **Storage Folder**: `public/uploads/` (ignored in `.gitignore`, except `.gitkeep`).
+- **Filename Rule**: `${Date.now()}-${imageFile.name.replace(/\s+/g, '_')}`.
+- **Database Field**: `item.image` stores the web-accessible path: `/uploads/<filename>`.
+- **Validation**: Mimetype must start with `image/` (JPEG, PNG, GIF, WebP); file size `<= 2 MB`.
+- **Cleanup**: When an item is deleted (`destroy`) or image replaced (`update`), the old image file is removed using `fs.unlink`.
+- **WYSIWYG Editor**: Quill (Snow theme) loaded from CDN. On form submit, HTML content is synchronized into `<input type="hidden" name="description">`.
+- **XSS Mitigation**: Controller strips `<script>` tags from the stored description using a regex replace before saving. Views output rich text using `<%- item.description %>`.
+
+---
+
 ## Phase Log
 
 | Phase | Status | Summary |
@@ -238,7 +251,7 @@ _(Created in later phases)_
 | 0 — Setup & MVC skeleton | ✅ Done | Express + EJS + session + Mongo skeleton; middleware stubs; styled home page with navbar/footer/partials; design system CSS; PROJECT_CONTEXT.md created. |
 | 1 — Authentication | ✅ Done | User model with bcrypt pre-save hook; authController (register, login, logout); requireLogin & redirectIfLoggedIn guards; views with flash messages & old input persistence. |
 | 2 — Items CRUD | ✅ Done | Item model with uppercase SKU & isLowStock virtual; itemController full CRUD; requireLogin protected routes; category filtering; shared _form partial with validation flash and old value refilling. |
-| 3 — Image upload + WYSIWYG | ⬜ Planned | |
+| 3 — Image upload + WYSIWYG | ✅ Done | express-fileupload integration; 2 MB limit; unique filename in public/uploads; image cleanup on delete; Quill WYSIWYG editor with server-side script tag sanitization; thumbnail and detail views. |
 | 4 — Suppliers, transactions, dashboard | ⬜ Planned | |
 | 5 — Browser JS (DOM, events, ES6) | ⬜ Planned | |
 | 6 — jQuery + Ajax | ⬜ Planned | |

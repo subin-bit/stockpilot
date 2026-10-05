@@ -16,7 +16,7 @@
     <%- include('../partials/messages') %>
 
     <div class="card" style="max-width: 800px; margin: 0 auto;">
-      <form action="/items/<%= item._id %>/update" method="POST" id="item-form" novalidate>
+      <form action="/items/<%= item._id %>/update" method="POST" id="item-form" enctype="multipart/form-data" novalidate>
         <%- include('_form') %>
 
         <div class="btn-group mt-lg" style="justify-content: flex-end;">

@@ -21,6 +21,14 @@ app.use(express.urlencoded({ extended: true }));
 // Parse JSON request bodies (used by Ajax endpoints in Phase 6)
 app.use(express.json());
 
+// ─── File upload middleware ─────────────────────────────────────
+// Registers express-fileupload for multipart forms (image uploads)
+const fileUpload = require('express-fileupload');
+app.use(fileUpload({
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB limit
+  abortOnLimit: false
+}));
+
 // ─── Static files ───────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 

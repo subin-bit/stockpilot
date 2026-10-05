@@ -41,6 +41,7 @@
         <table class="table" id="items-table">
           <thead>
             <tr>
+              <th style="width: 60px;">Image</th>
               <th>Name</th>
               <th>SKU</th>
               <th>Category</th>
@@ -53,6 +54,13 @@
           <tbody>
             <% items.forEach((item) => { %>
               <tr data-quantity="<%= item.quantity %>" data-reorder="<%= item.reorderLevel %>" class="<%= item.isLowStock ? 'low-stock' : '' %>">
+                <td>
+                  <% if (item.image) { %>
+                    <img src="<%= item.image %>" alt="<%= item.name %>" class="thumb">
+                  <% } else { %>
+                    <div class="thumb thumb-placeholder">No img</div>
+                  <% } %>
+                </td>
                 <td>
                   <a href="/items/<%= item._id %>" style="font-weight: var(--fw-semibold);">
                     <%= item.name %>
