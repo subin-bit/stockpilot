@@ -15,6 +15,9 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Trust reverse proxy (for Render, Heroku, Nginx HTTPS load balancers)
+app.set('trust proxy', 1);
+
 // ─── Body parsers ───────────────────────────────────────────────
 // Parse URL-encoded form data (extended: true allows nested objects)
 app.use(express.urlencoded({ extended: true }));

@@ -319,6 +319,25 @@ See table below.
 
 ---
 
+## Polish, Seeding & Deployment Architecture (Phase 7)
+
+### Database Seeder (`seed.js`)
+- Executed via `npm run seed`.
+- Resets collections idempotently and populates:
+  - 1 Default administrator (`admin@stockpilot.io` / `password123`).
+  - 3 Diverse suppliers (Apex Logistics, NexGen Components, Global Office).
+  - 12 Realistic inventory products across 5 categories, including 4 low-stock or critically depleted items to verify alerts.
+  - 6 Initial stock movements (`IN` receiving and `OUT` dispatch audit trail).
+
+### Production Deployment Readiness
+- Express `trust proxy` enabled in `index.js` for reverse proxies (Render, Heroku, Nginx HTTPS load balancers).
+- `package.json` specifies `"engines": { "node": ">=18" }`, `"start": "node index.js"`, `"dev": "nodemon index.js"`, `"seed": "node seed.js"`.
+- `Procfile` configured for container/Heroku execution (`web: node index.js`).
+- `.env.example` provided for clean configuration.
+- Comprehensive `README.md` with complete architecture guide, endpoint directory, and 5-minute viva demo presentation script.
+
+---
+
 ## Phase Log
 
 | Phase | Status | Summary |
@@ -330,4 +349,5 @@ See table below.
 | 4 — Suppliers, transactions, dashboard | ✅ Done | Supplier CRUD with item deletion restraint; StockTransaction model & log; atomic $inc stock updates & OUT quantity guard; dashboard metrics (valuation, low stock, recent txs). |
 | 5 — Browser JS (DOM, events, ES6) | ✅ Done | Pure vanilla JS & ES6 (no jQuery yet); validation with ARIA & error tooltips; event delegation delete confirmation; dynamic category filter with Set & Map; table sorting with spread syntax; ES6 StockItem class; live image preview. |
 | 6 — jQuery + Ajax | ✅ Done | jQuery CDN; /api endpoints (search, item, stats, partial); 401 JSON guard; debounced live search; auto-refresh dashboard stats & HTML load; item quick-view slideDown panel; live stock calculator helper; animated row fadeOut delete. |
-| 7 — Error handling + deployment | ⬜ Planned | |
+| 7 — Error handling + deployment | ✅ Done | Database seeder (seed.js) with 12 items & 3 suppliers; trust proxy config; engines in package.json; Procfile; .env.example; comprehensive README.md with 5-min viva presentation script. |
+
