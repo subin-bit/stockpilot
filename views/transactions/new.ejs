@@ -59,6 +59,19 @@
           </div>
         </div>
 
+        <!-- Live Stock Preview Helper (Phase 6 Ajax) -->
+        <div id="stock-calc-helper" class="card" style="display: none; background: var(--clr-surface-alt); padding: var(--sp-md); margin-bottom: var(--sp-md); border-left: 3px solid var(--clr-primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-sm); flex-wrap: wrap; gap: 8px;">
+            <div>
+              <span>Current stock: <strong id="helper-current-stock">0</strong> units.</span>
+              <span style="margin-left: 12px;">After transaction: <strong id="helper-projected-stock">0</strong> units.</span>
+            </div>
+            <div id="helper-stock-warning" class="badge badge-warning" style="display: none; color: #ef4444; background: rgba(239,68,68,0.15); font-weight: var(--fw-bold);">
+              ⚠️ Insufficient stock!
+            </div>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="note" class="form-label">Note / Reference (Optional)</label>
           <input

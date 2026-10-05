@@ -132,10 +132,10 @@ See table below.
 | GET | `/transactions` | transactionController.index | Yes | done |
 | GET | `/transactions/new` | transactionController.showCreate | Yes | done |
 | POST | `/transactions` | transactionController.store | Yes | done |
-| GET | `/api/items?search=` | apiController.searchItems | Yes (JSON 401) | planned |
-| GET | `/api/items/:id` | apiController.getItem | Yes (JSON 401) | planned |
-| GET | `/api/stats` | apiController.getStats | Yes (JSON 401) | planned |
-| GET | `/partials/recent-transactions` | apiController.recentTransactions | Yes (JSON 401) | planned |
+| GET | `/api/items?search=` | apiController.searchItems | Yes (JSON 401) | done |
+| GET | `/api/items/:id` | apiController.getItem | Yes (JSON 401) | done |
+| GET | `/api/stats` | apiController.getStats | Yes (JSON 401) | done |
+| GET | `/partials/recent-transactions` | apiController.recentTransactions | Yes (JSON 401) | done |
 
 ---
 
@@ -282,6 +282,43 @@ See table below.
 
 ---
 
+## jQuery & Ajax Architecture (Phase 6)
+
+### Server Endpoints & Auth Guard
+- **Auth Guard**: `requireApiLogin` middleware applied to `/api/*` and `/partials/*`. Returns HTTP 401 with JSON `{ success: false, message: 'Login required' }` (no 302 redirects).
+- `GET /api/items?search=...`: Case-insensitive regex search against `name`, `sku`, and `category`. Returns `{ success: true, count, data: [items] }`.
+- `GET /api/items/:id`: Fetches single item with populated supplier. Returns `{ success: true, data: item }`.
+- `GET /api/stats`: Computes dashboard aggregates (`totalItems`, `lowStockCount`, `totalSuppliers`, `totalStockValue`).
+- `GET /partials/recent-transactions`: Renders server-side HTML partial `partials/recent_transactions_table.ejs` for `.load()`.
+- `POST /items/:id/delete`: Dual-mode delete endpoint. If `X-Requested-With: XMLHttpRequest` or JSON requested, returns `{ success: true, message }` JSON.
+
+### Client-Side Implementations (`public/js/ajax.js`)
+1. **Feature A — Live Search on `/items`**:
+   - 300ms debounce timer on `#live-search`.
+   - Fetches `/api/items?search=...` via `$.getJSON`.
+   - Shows `#search-loading` spinner in-flight.
+   - Dynamically rebuilds table rows or toggles `#search-no-results`.
+   - Re-applies low-stock row styling via `window.StockPilotUI.applyLowStockHighlight()`.
+2. **Feature B — Auto-Refresh Dashboard Stats**:
+   - Manual button `#refresh-stats` click and periodic `setInterval` every 30 seconds.
+   - Smooth value transition using jQuery `.fadeOut(150)` and `.fadeIn(150)`.
+   - Refreshes transactions table asynchronously via `$('#recent-transactions-container').load('/partials/recent-transactions')`.
+3. **Feature C — Item Quick View Panel**:
+   - Event delegation on `.btn-quick-view` inside `#items-table`.
+   - Queries `/api/items/:id` via `$.getJSON`.
+   - Populates `#quick-view-panel` (image, SKU, price, stock, supplier, description) and animates open via `.slideDown(300)`.
+   - Smooth scrolls to panel; `#quick-view-close` collapses via `.slideUp(250)`.
+4. **Feature D — Stock IN/OUT Form Helper on `/transactions/new`**:
+   - On `#item` select change, fetches `/api/items/:id` stock level.
+   - Listens to `#type` and `#quantity` changes, computing projected balance live.
+   - Renders warning `#helper-stock-warning` in red if `OUT` movement exceeds current available stock.
+5. **Feature E — Animated Ajax Delete**:
+   - Intercepts table row `form.delete-form` submissions.
+   - Prompts confirmation, then posts via `$.ajax` with `X-Requested-With: XMLHttpRequest`.
+   - On response success, removes row with animated `row.fadeOut(400, () => row.remove())`.
+
+---
+
 ## Phase Log
 
 | Phase | Status | Summary |
@@ -292,5 +329,5 @@ See table below.
 | 3 — Image upload + WYSIWYG | ✅ Done | express-fileupload integration; 2 MB limit; unique filename in public/uploads; image cleanup on delete; Quill WYSIWYG editor with server-side script tag sanitization; thumbnail and detail views. |
 | 4 — Suppliers, transactions, dashboard | ✅ Done | Supplier CRUD with item deletion restraint; StockTransaction model & log; atomic $inc stock updates & OUT quantity guard; dashboard metrics (valuation, low stock, recent txs). |
 | 5 — Browser JS (DOM, events, ES6) | ✅ Done | Pure vanilla JS & ES6 (no jQuery yet); validation with ARIA & error tooltips; event delegation delete confirmation; dynamic category filter with Set & Map; table sorting with spread syntax; ES6 StockItem class; live image preview. |
-| 6 — jQuery + Ajax | ⬜ Planned | |
+| 6 — jQuery + Ajax | ✅ Done | jQuery CDN; /api endpoints (search, item, stats, partial); 401 JSON guard; debounced live search; auto-refresh dashboard stats & HTML load; item quick-view slideDown panel; live stock calculator helper; animated row fadeOut delete. |
 | 7 — Error handling + deployment | ⬜ Planned | |

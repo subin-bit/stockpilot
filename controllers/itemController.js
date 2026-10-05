@@ -321,10 +321,17 @@ const destroy = async (req, res) => {
 
     await Item.findByIdAndDelete(id);
 
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest' || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+      return res.json({ success: true, message: 'Item deleted successfully' });
+    }
+
     req.session.success = 'Item deleted';
     return req.session.save(() => res.redirect('/items'));
   } catch (err) {
     console.error('Error deleting item:', err);
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest' || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+      return res.status(500).json({ success: false, message: 'Server error deleting item' });
+    }
     res.status(500).render('errors/500', { title: 'Server Error — StockPilot' });
   }
 };

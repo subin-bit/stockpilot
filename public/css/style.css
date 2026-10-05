@@ -848,10 +848,11 @@ select.form-control {
   display: none;
   background: var(--clr-surface);
   border: 1px solid var(--clr-border);
+  border-left: 4px solid var(--clr-primary);
   border-radius: var(--radius-md);
   padding: var(--sp-xl);
-  margin-bottom: var(--sp-lg);
-  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--sp-xl);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), var(--shadow-glow);
 }
 
 /* ─── Error Pages ───────────────────────────────────────────────── */

@@ -41,7 +41,72 @@
             <a href="/items" class="btn btn-outline btn-sm">Clear</a>
           <% } %>
         </form>
+
+        <!-- Ajax Live Search (Phase 6) -->
+        <div style="flex: 1; min-width: 260px; display: flex; align-items: center; gap: var(--sp-sm);">
+          <input
+            type="text"
+            id="live-search"
+            class="form-control"
+            placeholder="Live search by name, SKU, category..."
+            autocomplete="off"
+          >
+          <span id="search-loading" class="loading" style="display: none;">Searching...</span>
+        </div>
       </div>
+    </div>
+
+    <!-- Ajax Item Quick View Panel (Phase 6) -->
+    <div id="quick-view-panel" class="quick-view">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--sp-md);">
+        <div>
+          <h2 id="qv-name" style="font-size: var(--fs-lg); margin-bottom: 2px;">Item Quick View</h2>
+          <span id="qv-status-badge" class="badge"></span>
+        </div>
+        <button type="button" id="quick-view-close" class="btn btn-outline btn-sm">✕ Close</button>
+      </div>
+
+      <div class="detail-grid" style="grid-template-columns: 140px 1fr; gap: var(--sp-lg);">
+        <div id="qv-image-container" style="display: flex; align-items: center; justify-content: center; background: var(--clr-surface-alt); border-radius: var(--radius-sm); padding: var(--sp-sm);">
+          <img id="qv-image" src="" alt="Item Image" class="thumb-lg" style="width: 120px; height: 120px; object-fit: contain;">
+        </div>
+
+        <div>
+          <div class="detail-row">
+            <span class="detail-label">SKU:</span>
+            <span class="detail-value"><code id="qv-sku"></code></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Category:</span>
+            <span class="detail-value" id="qv-category"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Price:</span>
+            <span class="detail-value" id="qv-price" style="font-weight: var(--fw-bold); color: var(--clr-primary);"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Current Stock:</span>
+            <span class="detail-value" id="qv-stock"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Supplier:</span>
+            <span class="detail-value" id="qv-supplier"></span>
+          </div>
+          <div id="qv-description-row" style="margin-top: var(--sp-sm);">
+            <span class="detail-label" style="display: block; margin-bottom: 4px;">Description:</span>
+            <div id="qv-description" class="rich-text-content text-muted" style="font-size: var(--fs-xs); line-height: 1.5; max-height: 120px; overflow-y: auto;"></div>
+          </div>
+          <div style="margin-top: var(--sp-md); display: flex; gap: var(--sp-sm);">
+            <a id="qv-full-link" href="#" class="btn btn-primary btn-sm">Full Details Page →</a>
+            <a id="qv-restock-link" href="#" class="btn btn-success btn-sm">+ Move Stock</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Search No Results Alert -->
+    <div id="search-no-results" class="card empty-state" style="display: none; margin-bottom: var(--sp-lg);">
+      <p>No inventory items match your search.</p>
     </div>
 
     <% if (items && items.length > 0) { %>
@@ -87,6 +152,7 @@
                 </td>
                 <td class="text-right">
                   <div class="btn-group" style="justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline btn-sm btn-quick-view" data-id="<%= item._id %>">Quick</button>
                     <a href="/items/<%= item._id %>" class="btn btn-outline btn-sm">View</a>
                     <a href="/items/<%= item._id %>/edit" class="btn btn-outline btn-sm">Edit</a>
                     <form action="/items/<%= item._id %>/delete" method="POST" class="inline-form delete-form">

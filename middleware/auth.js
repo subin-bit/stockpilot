@@ -19,4 +19,13 @@ const redirectIfLoggedIn = (req, res, next) => {
   next();
 };
 
-module.exports = { requireLogin, redirectIfLoggedIn };
+// requireApiLogin: for API / Ajax routes.
+// Returns 401 JSON instead of redirecting to HTML login page.
+const requireApiLogin = (req, res, next) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ success: false, message: 'Login required' });
+  }
+  next();
+};
+
+module.exports = { requireLogin, redirectIfLoggedIn, requireApiLogin };

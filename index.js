@@ -90,7 +90,11 @@ app.use('/suppliers', require('./routes/supplierRoutes'));
 // Stock transactions routes
 app.use('/transactions', require('./routes/transactionRoutes'));
 
-// Phase 6: app.use('/api', require('./routes/apiRoutes'));
+// ─── Phase 6: API & Ajax Partial Routes ─────────────────────────
+const { requireApiLogin } = require('./middleware/auth');
+const apiController = require('./controllers/apiController');
+app.use('/api', require('./routes/apiRoutes'));
+app.get('/partials/recent-transactions', requireApiLogin, apiController.recentTransactions);
 
 // ─── 404 handler (must be the LAST route) ───────────────────────
 app.use((req, res) => {

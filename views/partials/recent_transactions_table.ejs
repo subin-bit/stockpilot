@@ -1,0 +1,45 @@
+<!-- views/partials/recent_transactions_table.ejs — Reusable recent transactions partial -->
+<% if (typeof recentTransactions !== 'undefined' && recentTransactions && recentTransactions.length > 0) { %>
+  <div class="table-wrapper">
+    <table class="table" id="recent-transactions">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Type</th>
+          <th>Quantity</th>
+          <th>User</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% recentTransactions.forEach((tx) => { %>
+          <tr>
+            <td>
+              <% if (tx.item) { %>
+                <a href="/items/<%= tx.item._id %>" style="font-weight: var(--fw-semibold);">
+                  <%= tx.item.name %>
+                </a>
+              <% } else { %>
+                <span class="text-muted">[Deleted]</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (tx.type === 'IN') { %>
+                <span class="badge badge-in">IN</span>
+              <% } else { %>
+                <span class="badge badge-out">OUT</span>
+              <% } %>
+            </td>
+            <td style="font-weight: var(--fw-bold);">
+              <%= tx.type === 'IN' ? '+' : '-' %><%= tx.quantity %>
+            </td>
+            <td><%= tx.user ? tx.user.name : '—' %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } else { %>
+  <div class="empty-state" style="padding: var(--sp-lg);">
+    <p>No transactions recorded yet.</p>
+  </div>
+<% } %>
