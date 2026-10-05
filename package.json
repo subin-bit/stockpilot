@@ -1,0 +1,37 @@
+{
+  "name": "stockpilot",
+  "version": "1.0.0",
+  "description": "A basic inventory management web app built with Express, EJS and MongoDB.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "inventory",
+    "express",
+    "ejs",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "connect-mongo": "^6.0.0",
+    "dotenv": "^18.0.5",
+    "ejs": "^7.0.1",
+    "express": "^5.2.1",
+    "express-fileupload": "^1.5.2",
+    "express-session": "^1.19.0",
+    "mongoose": "^9.10.4"
+  },
+  "allowScripts": {
+    "bcrypt@6.0.0": true
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,245 @@
+# PROJECT_CONTEXT.md — StockPilot Shared Contract
+
+> **Every phase must read this file first and follow its rules exactly.**
+
+---
+
+## Overview
+
+StockPilot is a basic inventory management web app built as a college project. It is a **server-rendered Express app** using EJS views, MongoDB via Mongoose, and Express sessions for authentication. The browser side uses vanilla JavaScript, jQuery and Ajax.
+
+---
+
+## Allowed Tech (STRICT — use ONLY these)
+
+| Layer | Allowed | NOT allowed |
+|---|---|---|
+| Server runtime | Node.js with CommonJS (`require` / `module.exports`) | ES modules, TypeScript |
+| Framework | Express | — |
+| Templating | EJS | — |
+| Database | MongoDB, Mongoose | — |
+| Auth | express-session, connect-mongo, bcrypt | jsonwebtoken, passport |
+| Upload | express-fileupload | multer |
+| Env | dotenv | — |
+| Dev | nodemon (dev dependency) | — |
+| Browser | Vanilla JS (ES6), jQuery (CDN) | React, Tailwind, Bootstrap |
+| Forms | HTML GET/POST only | method-override |
+
+**Code style:** `const`/`let` only (no `var`), arrow functions, template strings, destructuring, `async`/`await`. Short comments on non-obvious lines.
+
+---
+
+## Folder Structure
+
+```
+stockpilot/
+  index.js                  ← entry: Express setup, middleware, routes, DB, listen
+  package.json              ← scripts: start, dev
+  Procfile                  ← web: node index.js
+  .env.example / .env       ← PORT, MONGO_URI, SESSION_SECRET
+  .gitignore                ← node_modules, .env, public/uploads/*
+  models/                   ← User.js, Item.js, Supplier.js, StockTransaction.js
+  controllers/              ← one file per module
+  routes/                   ← one Router file per module
+  middleware/
+    auth.js                 ← requireLogin, redirectIfLoggedIn
+    flash.js                ← session → res.locals flash middleware
+  views/
+    partials/               ← header.ejs, navbar.ejs, messages.ejs, footer.ejs
+    errors/                 ← 404.ejs, 500.ejs
+    auth/                   ← register.ejs, login.ejs (Phase 1)
+    items/                  ← index, new, edit, show, _form (Phase 2)
+    suppliers/              ← index, new, edit, show, _form (Phase 4)
+    transactions/           ← index, new (Phase 4)
+    home.ejs                ← dashboard / landing page
+  public/
+    css/style.css           ← design system
+    js/main.js              ← vanilla JS (Phase 5)
+    js/ajax.js              ← jQuery + Ajax (Phase 6)
+    uploads/                ← uploaded images (.gitkeep)
+```
+
+---
+
+## Contract (9 rules)
+
+### 1. Environment
+- Port: `process.env.PORT` (default `3000`).
+- Database: `mongoose.connect(process.env.MONGO_URI)`.
+
+### 2. Express setup (index.js)
+- `app.set("view engine", "ejs")`
+- `express.urlencoded({ extended: true })`
+- `express.json()`
+- `express.static("public")`
+- Session: `express-session` with `connect-mongo` store (same `MONGO_URI`), `resave: false`, `saveUninitialized: false`.
+
+### 3. Routing conventions
+- Page routes → rendered EJS.
+- Updates/deletes via POST: `POST /items/:id/update`, `POST /items/:id/delete`.
+- API (Ajax) routes under `/api/...` return JSON: `{ success: true, data: ... }`.
+
+### 4. URL map
+See table below.
+
+### 5. Flash messages and form persistence (no extra package)
+- `middleware/flash.js` copies `req.session.errors` (array), `req.session.success` (string), `req.session.formData` (object) into `res.locals` as `errors`, `success`, `old`, then deletes them from session.
+- Controllers on failure: set `req.session.errors`, `req.session.formData = req.body`, `res.redirect(back)`.
+- `views/partials/messages.ejs` displays errors and success.
+- Every form uses `old.fieldName` to refill inputs.
+
+### 6. Auth state
+- After login: `req.session.userId` is set.
+- `middleware/auth.js` exports `requireLogin` and `redirectIfLoggedIn`.
+- A global middleware sets `res.locals.currentUser` (or `null`) so every view can use it.
+
+### 7. Naming
+- HTML form `name` attributes MUST equal Mongoose schema field names exactly.
+
+### 8. Views
+- All views include the same partials: `header` (head + CSS + jQuery CDN + main.js defer), `navbar`, `messages`, `footer`.
+
+### 9. Error handling
+- 404 handler (last route) → `errors/404.ejs`.
+- Error-handling middleware (4 params) → `errors/500.ejs`.
+
+---
+
+## URL Map
+
+| Method | Path | Controller function | Login required | Status |
+|---|---|---|---|---|
+| GET | `/` | dashboardController.index | Yes | done (protected) |
+| GET | `/auth/register` | authController.showRegister | No (redirectIfLoggedIn) | done |
+| POST | `/auth/register` | authController.register | No | done |
+| GET | `/auth/login` | authController.showLogin | No (redirectIfLoggedIn) | done |
+| POST | `/auth/login` | authController.login | No | done |
+| GET | `/auth/logout` | authController.logout | Yes | done |
+| GET | `/items` | itemController.index | Yes | planned |
+| GET | `/items/new` | itemController.showCreate | Yes | planned |
+| POST | `/items` | itemController.store | Yes | planned |
+| GET | `/items/:id` | itemController.show | Yes | planned |
+| GET | `/items/:id/edit` | itemController.edit | Yes | planned |
+| POST | `/items/:id/update` | itemController.update | Yes | planned |
+| POST | `/items/:id/delete` | itemController.destroy | Yes | planned |
+| GET | `/suppliers` | supplierController.index | Yes | planned |
+| GET | `/suppliers/new` | supplierController.showCreate | Yes | planned |
+| POST | `/suppliers` | supplierController.store | Yes | planned |
+| GET | `/suppliers/:id` | supplierController.show | Yes | planned |
+| GET | `/suppliers/:id/edit` | supplierController.edit | Yes | planned |
+| POST | `/suppliers/:id/update` | supplierController.update | Yes | planned |
+| POST | `/suppliers/:id/delete` | supplierController.destroy | Yes | planned |
+| GET | `/transactions` | transactionController.index | Yes | planned |
+| GET | `/transactions/new` | transactionController.showCreate | Yes | planned |
+| POST | `/transactions` | transactionController.store | Yes | planned |
+| GET | `/api/items?search=` | apiController.searchItems | Yes (JSON 401) | planned |
+| GET | `/api/items/:id` | apiController.getItem | Yes (JSON 401) | planned |
+| GET | `/api/stats` | apiController.getStats | Yes (JSON 401) | planned |
+| GET | `/partials/recent-transactions` | apiController.recentTransactions | Yes (JSON 401) | planned |
+
+---
+
+## Models
+
+_(Created in later phases)_
+
+| Model | Phase | Fields | Details |
+|---|---|---|---|
+| User | 1 | name, email, password | Email unique/lowercase/trimmed; bcrypt pre-save hash; minlength 6 |
+| Item | 2 | name, sku, category, unitPrice, quantity, reorderLevel, description, image, supplier, createdBy, timestamps | Planned |
+| Supplier | 4 | name, email, phone, address, timestamps | Planned |
+| StockTransaction | 4 | item, type (IN/OUT), quantity, note, user, timestamps | Planned |
+
+---
+
+## Reusable CSS Classes
+
+### Layout
+- `.container` — max-width wrapper with horizontal padding
+- `.main-content` — flex-grow content area below navbar
+
+### Navbar
+- `.navbar`, `.navbar-inner`, `.navbar-brand`, `.brand-highlight`
+- `.nav-links`, `.nav-link`, `.nav-auth`, `.nav-user`
+- `.navbar-toggle`, `.toggle-bar`, `.navbar-menu.open`
+
+### Buttons
+- `.btn` — base button
+- `.btn-sm`, `.btn-lg` — size variants
+- `.btn-primary`, `.btn-outline`, `.btn-success`, `.btn-danger`, `.btn-warning` — colour variants
+- `.btn-icon` — icon-only button
+- `.btn-group` — flex row of buttons
+
+### Cards
+- `.card`, `.card-header`, `.card-title`
+- `.stat-card`, `.stat-icon`, `.stat-info`, `.stat-value`, `.stat-label`
+- `.feature-card`, `.feature-icon`
+
+### Forms
+- `.form-group` — label + input wrapper
+- `.form-label`, `.form-control`, `.form-hint`
+- `.form-row` — two-column grid
+- `.form-control-file` — file input
+- `.field-error` — client-side validation error text
+- `.auth-wrapper`, `.auth-card`, `.auth-subtitle`, `.auth-footer`
+
+### Tables
+- `.table-wrapper` — scrollable border container
+- `.table` — the table itself
+- `.sortable`, `.sorted-asc`, `.sorted-desc` — header states (Phase 5)
+- `.low-stock` — row highlight
+
+### Badges
+- `.badge`, `.badge-warning`, `.badge-success`, `.badge-error`, `.badge-info`
+- `.badge-in`, `.badge-out` — stock transaction type
+
+### Messages
+- `.msg`, `.msg-error`, `.msg-success`, `.msg-close`
+
+### Images
+- `.thumb`, `.thumb-lg`, `.thumb-placeholder`
+- `.image-preview`
+
+### Detail pages
+- `.detail-grid`, `.detail-row`, `.detail-label`, `.detail-value`
+
+### Page structure
+- `.page-header`, `.page-title`
+- `.filter-bar`, `.search-input`
+- `.quick-view` — Ajax quick-view panel (Phase 6)
+- `.loading` — spinner indicator
+- `.empty-state`
+- `.inline-form` — inline delete form
+- `.error-page`, `.error-content`, `.error-code`
+
+### Utilities
+- `.text-center`, `.text-right`, `.text-muted`, `.text-success`, `.text-error`, `.text-warning`
+- `.mt-sm`, `.mt-md`, `.mt-lg`, `.mb-sm`, `.mb-md`, `.mb-lg`
+
+---
+
+## Dashboard Element IDs (for JS hooks)
+
+| ID | Element | Used in |
+|---|---|---|
+| `stat-total-items` | Total items stat card | Phase 4, 6 |
+| `stat-low-stock` | Low stock stat card | Phase 4, 6 |
+| `stat-suppliers` | Suppliers stat card | Phase 4, 6 |
+| `stat-stock-value` | Stock value stat card | Phase 4, 6 |
+| `low-stock-table` | Low stock items table | Phase 4, 5 |
+| `recent-transactions` | Recent transactions table | Phase 4, 6 |
+
+---
+
+## Phase Log
+
+| Phase | Status | Summary |
+|---|---|---|
+| 0 — Setup & MVC skeleton | ✅ Done | Express + EJS + session + Mongo skeleton; middleware stubs; styled home page with navbar/footer/partials; design system CSS; PROJECT_CONTEXT.md created. |
+| 1 — Authentication | ✅ Done | User model with bcrypt pre-save hook; authController (register, login, logout); requireLogin & redirectIfLoggedIn guards; views with flash messages & old input persistence. |
+| 2 — Items CRUD | ⬜ Planned | |
+| 3 — Image upload + WYSIWYG | ⬜ Planned | |
+| 4 — Suppliers, transactions, dashboard | ⬜ Planned | |
+| 5 — Browser JS (DOM, events, ES6) | ⬜ Planned | |
+| 6 — jQuery + Ajax | ⬜ Planned | |
+| 7 — Error handling + deployment | ⬜ Planned | |

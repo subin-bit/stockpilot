@@ -1,0 +1,23 @@
+<!-- Flash messages partial -->
+<!-- Displays one-time error and success messages set by controllers via the session -->
+<% if (errors && errors.length > 0) { %>
+  <div class="msg msg-error" id="flash-errors">
+    <button class="msg-close" aria-label="Close">&times;</button>
+    <% if (errors.length === 1) { %>
+      <p><%= errors[0] %></p>
+    <% } else { %>
+      <ul>
+        <% errors.forEach((err) => { %>
+          <li><%= err %></li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </div>
+<% } %>
+
+<% if (success && success.length > 0) { %>
+  <div class="msg msg-success" id="flash-success">
+    <button class="msg-close" aria-label="Close">&times;</button>
+    <p><%= success %></p>
+  </div>
+<% } %>
