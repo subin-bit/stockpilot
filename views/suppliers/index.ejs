@@ -8,9 +8,11 @@
         <h1 class="page-title">Suppliers Directory</h1>
         <p class="text-muted">Manage your vendor contacts and linked inventory products</p>
       </div>
-      <div>
-        <a href="/suppliers/new" class="btn btn-primary">+ Add New Supplier</a>
-      </div>
+      <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+        <div>
+          <a href="/suppliers/new" class="btn btn-primary">+ Add New Supplier</a>
+        </div>
+      <% } %>
     </div>
 
     <%- include('../partials/messages') %>
@@ -45,10 +47,12 @@
                 <td class="text-right">
                   <div class="btn-group" style="justify-content: flex-end;">
                     <a href="/suppliers/<%= sup._id %>" class="btn btn-outline btn-sm">View</a>
-                    <a href="/suppliers/<%= sup._id %>/edit" class="btn btn-outline btn-sm">Edit</a>
-                    <form action="/suppliers/<%= sup._id %>/delete" method="POST" class="inline-form delete-form">
-                      <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                    </form>
+                    <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+                      <a href="/suppliers/<%= sup._id %>/edit" class="btn btn-outline btn-sm">Edit</a>
+                      <form action="/suppliers/<%= sup._id %>/delete" method="POST" class="inline-form delete-form">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                      </form>
+                    <% } %>
                   </div>
                 </td>
               </tr>
@@ -59,7 +63,9 @@
     <% } else { %>
       <div class="card empty-state">
         <p>No suppliers registered yet.</p>
-        <a href="/suppliers/new" class="btn btn-primary">+ Add Your First Supplier</a>
+        <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+          <a href="/suppliers/new" class="btn btn-primary">+ Add Your First Supplier</a>
+        <% } %>
       </div>
     <% } %>
   </div>

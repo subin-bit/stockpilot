@@ -48,6 +48,8 @@ $(function () {
               $searchNoResults.hide();
               $itemsTable.closest('.table-wrapper').show();
 
+              const isAdmin = $itemsTable.data('user-role') === 'admin';
+
               const rowsHtml = items.map((item) => {
                 const imgHtml = item.image
                   ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" class="thumb">`
@@ -56,6 +58,13 @@ $(function () {
                 const statusHtml = item.isLowStock
                   ? `<span class="badge badge-warning">Low Stock (≤ ${item.reorderLevel})</span>`
                   : `<span class="badge badge-success">In Stock</span>`;
+
+                const adminActions = isAdmin ? `
+                  <a href="/items/${item._id}/edit" class="btn btn-outline btn-sm">Edit</a>
+                  <form action="/items/${item._id}/delete" method="POST" class="inline-form delete-form">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                  </form>
+                ` : '';
 
                 return `
                   <tr data-quantity="${item.quantity}" data-reorder="${item.reorderLevel}" data-category="${escapeHtml(item.category)}" class="${item.isLowStock ? 'low-stock' : ''}">
@@ -74,10 +83,7 @@ $(function () {
                       <div class="btn-group" style="justify-content: flex-end;">
                         <button type="button" class="btn btn-outline btn-sm btn-quick-view" data-id="${item._id}">Quick</button>
                         <a href="/items/${item._id}" class="btn btn-outline btn-sm">View</a>
-                        <a href="/items/${item._id}/edit" class="btn btn-outline btn-sm">Edit</a>
-                        <form action="/items/${item._id}/delete" method="POST" class="inline-form delete-form">
-                          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                        </form>
+                        ${adminActions}
                       </div>
                     </td>
                   </tr>

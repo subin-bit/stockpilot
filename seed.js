@@ -34,14 +34,23 @@ const seedDatabase = async () => {
     ]);
     console.log('✓ Cleared Users, Suppliers, Items, and StockTransactions');
 
-    // 2. Create Default Admin User
-    console.log('→ Creating default administrator account...');
+    // 2. Create Default Accounts (Admin & Standard User)
+    console.log('→ Creating default accounts (Admin and Standard User)...');
     const adminUser = await User.create({
       name: 'System Admin',
       email: 'admin@stockpilot.io',
-      password: 'password123' // Hashed by User model pre-save hook
+      password: 'password123',
+      role: 'admin'
     });
-    console.log(`✓ Admin user created: ${adminUser.email} (Password: password123)`);
+    console.log(`✓ Admin created: ${adminUser.email} (Password: password123, Role: admin)`);
+
+    const standardUser = await User.create({
+      name: 'Warehouse Operator',
+      email: 'user@stockpilot.io',
+      password: 'password123',
+      role: 'user'
+    });
+    console.log(`✓ User created:  ${standardUser.email} (Password: password123, Role: user)`);
 
     // 3. Create Suppliers
     console.log('→ Creating suppliers...');
@@ -269,9 +278,9 @@ const seedDatabase = async () => {
     console.log('====================================================');
     console.log('✅ StockPilot Database Seeded Successfully!');
     console.log('====================================================');
-    console.log('🔑 Admin Login Credentials:');
-    console.log('   Email:    admin@stockpilot.io');
-    console.log('   Password: password123');
+    console.log('🔑 Login Credentials:');
+    console.log('   👑 ADMIN (Full Rights):   Email: admin@stockpilot.io | Password: password123');
+    console.log('   👤 USER  (Update Stock):  Email: user@stockpilot.io  | Password: password123');
     console.log('📦 Total Items:        ', createdItems.length);
     console.log('⚠️ Low-Stock Items:    ', createdItems.filter(i => i.quantity <= i.reorderLevel).length);
     console.log('🏭 Total Suppliers:    ', suppliers.length);

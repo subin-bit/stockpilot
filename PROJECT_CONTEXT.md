@@ -88,10 +88,19 @@ See table below.
 - `views/partials/messages.ejs` displays errors and success.
 - Every form uses `old.fieldName` to refill inputs.
 
-### 6. Auth state
+### 6. Auth state & Role-Based Access Control (RBAC)
 - After login: `req.session.userId` is set.
-- `middleware/auth.js` exports `requireLogin` and `redirectIfLoggedIn`.
-- A global middleware sets `res.locals.currentUser` (or `null`) so every view can use it.
+- `User.role`: `'admin'` or `'user'` (default: `'user'`).
+- `middleware/auth.js` exports:
+  - `requireLogin`: Guards protected views.
+  - `redirectIfLoggedIn`: Prevents logged-in users from visiting login/register.
+  - `requireApiLogin`: Returns HTTP 401 JSON for unauthorized Ajax/API requests.
+  - `requireAdmin`: Restricts catalog creation, editing, deleting, supplier management, and Stock IN to `'admin'`. Non-admins are redirected to `/` with an error message.
+  - `requireAdminApi`: Returns HTTP 403 JSON for non-admin API requests.
+- Global middleware sets `res.locals.currentUser` and `req.currentUser`.
+- Rights separation:
+  - **Admin**: Full control (create/edit/delete items & suppliers; apply for and receive Stock IN; dispatch Stock OUT).
+  - **User**: View catalog and suppliers; update inventory levels by recording Stock OUT dispatches.
 
 ### 7. Naming
 - HTML form `name` attributes MUST equal Mongoose schema field names exactly.
@@ -116,22 +125,22 @@ See table below.
 | POST | `/auth/login` | authController.login | No | done |
 | GET | `/auth/logout` | authController.logout | Yes | done |
 | GET | `/items` | itemController.index | Yes | done |
-| GET | `/items/new` | itemController.showCreate | Yes | done |
-| POST | `/items` | itemController.store | Yes | done |
+| GET | `/items/new` | itemController.showCreate | Yes (Admin only) | done |
+| POST | `/items` | itemController.store | Yes (Admin only) | done |
 | GET | `/items/:id` | itemController.show | Yes | done |
-| GET | `/items/:id/edit` | itemController.edit | Yes | done |
-| POST | `/items/:id/update` | itemController.update | Yes | done |
-| POST | `/items/:id/delete` | itemController.destroy | Yes | done |
+| GET | `/items/:id/edit` | itemController.edit | Yes (Admin only) | done |
+| POST | `/items/:id/update` | itemController.update | Yes (Admin only) | done |
+| POST | `/items/:id/delete` | itemController.destroy | Yes (Admin only) | done |
 | GET | `/suppliers` | supplierController.index | Yes | done |
-| GET | `/suppliers/new` | supplierController.showCreate | Yes | done |
-| POST | `/suppliers` | supplierController.store | Yes | done |
+| GET | `/suppliers/new` | supplierController.showCreate | Yes (Admin only) | done |
+| POST | `/suppliers` | supplierController.store | Yes (Admin only) | done |
 | GET | `/suppliers/:id` | supplierController.show | Yes | done |
-| GET | `/suppliers/:id/edit` | supplierController.edit | Yes | done |
-| POST | `/suppliers/:id/update` | supplierController.update | Yes | done |
-| POST | `/suppliers/:id/delete` | supplierController.destroy | Yes | done |
+| GET | `/suppliers/:id/edit` | supplierController.edit | Yes (Admin only) | done |
+| POST | `/suppliers/:id/update` | supplierController.update | Yes (Admin only) | done |
+| POST | `/suppliers/:id/delete` | supplierController.destroy | Yes (Admin only) | done |
 | GET | `/transactions` | transactionController.index | Yes | done |
 | GET | `/transactions/new` | transactionController.showCreate | Yes | done |
-| POST | `/transactions` | transactionController.store | Yes | done |
+| POST | `/transactions` | transactionController.store | Yes (Stock IN: Admin only; OUT: User & Admin) | done |
 | GET | `/api/items?search=` | apiController.searchItems | Yes (JSON 401) | done |
 | GET | `/api/items/:id` | apiController.getItem | Yes (JSON 401) | done |
 | GET | `/api/stats` | apiController.getStats | Yes (JSON 401) | done |
@@ -143,10 +152,10 @@ See table below.
 
 | Model | Phase | Fields | Details |
 |---|---|---|---|
-| User | 1 | name, email, password | Email unique/lowercase/trimmed; bcrypt pre-save hash; minlength 6 |
+| User | 1 | name, email, password, role | Email unique/lowercase/trimmed; bcrypt pre-save hash; minlength 6; role enum: ['admin', 'user'], default: 'user' |
 | Item | 2 | name, sku, category, unitPrice, quantity, reorderLevel, description, image, supplier, createdBy, timestamps | SKU unique/uppercase/trimmed; unitPrice min 0; quantity & reorderLevel defaults; virtual isLowStock |
 | Supplier | 4 | name, email, phone, address, timestamps | Vendor registry; deletion restricted when linked items exist |
-| StockTransaction | 4 | item, type (IN/OUT), quantity, note, user, timestamps | Immutable audit log; triggers atomic $inc quantity updates with rollback |
+| StockTransaction | 4 | item, type (IN/OUT), quantity, note, user, timestamps | Immutable audit log; triggers atomic $inc quantity updates with rollback; Stock IN restricted to Admin |
 
 ---
 

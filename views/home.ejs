@@ -20,9 +20,13 @@
 
       <% if (typeof currentUser !== 'undefined' && currentUser) { %>
         <div class="btn-group">
-          <a href="/items/new" class="btn btn-primary">+ Add Item</a>
+          <% if (currentUser.role === 'admin') { %>
+            <a href="/items/new" class="btn btn-primary">+ Add Item</a>
+          <% } %>
           <a href="/transactions/new" class="btn btn-success">+ Record Movement</a>
-          <a href="/suppliers/new" class="btn btn-outline">+ Add Supplier</a>
+          <% if (currentUser.role === 'admin') { %>
+            <a href="/suppliers/new" class="btn btn-outline">+ Add Supplier</a>
+          <% } %>
         </div>
       <% } %>
     </div>
@@ -104,7 +108,11 @@
                     </td>
                     <td><%= it.reorderLevel %></td>
                     <td class="text-right">
-                      <a href="/transactions/new?item=<%= it._id %>" class="btn btn-success btn-sm">+ Restock</a>
+                      <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+                        <a href="/transactions/new?item=<%= it._id %>&type=IN" class="btn btn-success btn-sm">+ Restock</a>
+                      <% } else { %>
+                        <a href="/items/<%= it._id %>" class="btn btn-outline btn-sm">View Item</a>
+                      <% } %>
                     </td>
                   </tr>
                 <% }); %>

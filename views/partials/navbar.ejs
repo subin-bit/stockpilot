@@ -27,7 +27,12 @@
 
       <div class="nav-auth">
         <% if (typeof currentUser !== 'undefined' && currentUser) { %>
-          <span class="nav-user">Hello, <strong><%= currentUser.name %></strong></span>
+          <span class="nav-user" style="display: inline-flex; align-items: center; gap: 6px;">
+            <span>Hello, <strong><%= currentUser.name %></strong></span>
+            <span class="badge <%= currentUser.role === 'admin' ? 'badge-primary' : 'badge-info' %>" style="font-size: 10px; text-transform: uppercase;">
+              <%= currentUser.role || 'user' %>
+            </span>
+          </span>
           <a href="/auth/logout" class="btn btn-outline btn-sm">Logout</a>
         <% } else { %>
           <a href="/auth/login" class="btn btn-outline btn-sm">Login</a>

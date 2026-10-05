@@ -60,10 +60,12 @@ app.use(flash);
 const User = require('./models/User');
 app.use(async (req, res, next) => {
   res.locals.currentUser = null;
+  req.currentUser = null;
   if (req.session.userId) {
     try {
       const user = await User.findById(req.session.userId).select('-password');
       res.locals.currentUser = user;
+      req.currentUser = user;
     } catch (err) {
       console.error('Error fetching user for session:', err.message);
     }

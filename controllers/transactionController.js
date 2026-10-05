@@ -66,6 +66,13 @@ const store = async (req, res) => {
     return req.session.save(() => res.redirect('/transactions/new'));
   }
 
+  // Role check: Only administrators can apply for / receive stock (Stock IN)
+  if (type === 'IN' && (!req.currentUser || req.currentUser.role !== 'admin')) {
+    req.session.errors = ['Access denied: Only administrators are authorized to apply for and receive stock (Stock IN).'];
+    req.session.formData = req.body;
+    return req.session.save(() => res.redirect('/transactions/new'));
+  }
+
   try {
     // 1. Fetch item to verify existence and check stock for OUT transactions
     const item = await Item.findById(itemId);

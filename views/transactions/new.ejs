@@ -38,10 +38,20 @@
           <div class="form-group">
             <label for="type" class="form-label">Movement Type *</label>
             <select name="type" id="type" class="form-control" required>
-              <% const selectedType = typeof old !== 'undefined' && old.type ? old.type : 'IN'; %>
-              <option value="IN" <%= selectedType === 'IN' ? 'selected' : '' %>>Stock IN (+ Receive inventory)</option>
-              <option value="OUT" <%= selectedType === 'OUT' ? 'selected' : '' %>>Stock OUT (- Dispatch / Sell)</option>
+              <%
+                const isAdmin = typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin';
+                const selectedType = typeof old !== 'undefined' && old.type ? old.type : (isAdmin ? 'IN' : 'OUT');
+              %>
+              <% if (isAdmin) { %>
+                <option value="IN" <%= selectedType === 'IN' ? 'selected' : '' %>>Stock IN (+ Apply / Receive inventory)</option>
+              <% } %>
+              <option value="OUT" <%= selectedType === 'OUT' ? 'selected' : '' %>>Stock OUT (- Dispatch / Update stock)</option>
             </select>
+            <% if (!isAdmin) { %>
+              <p class="form-hint" style="color: var(--clr-text-muted); font-size: var(--fs-xs); margin-top: 4px;">
+                ℹ️ <em>Only administrators can apply for and receive new stock (Stock IN). Operators can record Stock OUT dispatches to update inventory levels.</em>
+              </p>
+            <% } %>
           </div>
 
           <div class="form-group">

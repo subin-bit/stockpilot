@@ -141,18 +141,16 @@ Open your browser and navigate to: **`http://localhost:3000`**
 
 ---
 
-## 🔑 Database Seeder & Demo Credentials
+## 🔑 Role-Based Access Control & Demo Credentials
 
-Running `npm run seed` resets the collections and generates a realistic demo dataset:
+StockPilot implements two distinct access tiers:
+1. **👑 Administrator (`admin`)**: Full authority to create, edit, and delete catalog items and suppliers, and **apply for/receive incoming inventory (`Stock IN`)**.
+2. **👤 Standard User (`user`)**: Can view inventory and suppliers, utilize live search and quick view, and **update inventory levels by dispatching stock (`Stock OUT`)**.
 
-| Attribute | Seeded Value |
-|---|---|
-| **Admin Email** | `admin@stockpilot.io` |
-| **Admin Password** | `password123` |
-| **Suppliers** | 3 vendors (Apex Logistics, NexGen Components, Global Office) |
-| **Catalog Items** | 12 diverse inventory products across 5 categories |
-| **Low-Stock Items** | 4 items configured at or below reorder levels (for instant alert testing) |
-| **Transactions** | 6 audit movements (`IN` receiving and `OUT` dispatching) |
+| Role | Email | Password | Allowed Capabilities |
+|---|---|---|---|
+| **Administrator** | `admin@stockpilot.io` | `password123` | Add/Edit/Delete Items & Suppliers, Apply for / Receive Stock (`Stock IN`), Dispatch Stock (`Stock OUT`). |
+| **Standard User** | `user@stockpilot.io` | `password123` | View Items & Suppliers, Live Search, Item Quick View, Record Stock Movements (`Stock OUT` to update levels). |
 
 ---
 
@@ -161,28 +159,28 @@ Running `npm run seed` resets the collections and generates a realistic demo dat
 | HTTP Verb | Path | Controller Handler | Authentication Guard | Description / Response |
 |---|---|---|---|---|
 | **GET** | `/` | `dashboardController.index` | `requireLogin` | Dashboard with stats, alerts, and recent movements |
-| **GET** | `/auth/register` | `authController.showRegister` | `redirectIfLoggedIn` | User registration view |
+| **GET** | `/auth/register` | `authController.showRegister` | `redirectIfLoggedIn` | User registration view (creates standard user) |
 | **POST** | `/auth/register` | `authController.register` | `redirectIfLoggedIn` | Handle account creation with bcrypt hashing |
 | **GET** | `/auth/login` | `authController.showLogin` | `redirectIfLoggedIn` | User login view |
 | **POST** | `/auth/login` | `authController.login` | `redirectIfLoggedIn` | Handle session creation |
 | **GET** | `/auth/logout` | `authController.logout` | `requireLogin` | Destroy session and redirect to login |
 | **GET** | `/items` | `itemController.index` | `requireLogin` | Inventory catalog table with live search & filters |
-| **GET** | `/items/new` | `itemController.showCreate` | `requireLogin` | Item creation form (with image upload & Quill) |
-| **POST** | `/items` | `itemController.store` | `requireLogin` | Save new item to database |
+| **GET** | `/items/new` | `itemController.showCreate` | `requireAdmin` (Admin only) | Item creation form (with image upload & Quill) |
+| **POST** | `/items` | `itemController.store` | `requireAdmin` (Admin only) | Save new item to database |
 | **GET** | `/items/:id` | `itemController.show` | `requireLogin` | Item detail view with audit transactions |
-| **GET** | `/items/:id/edit` | `itemController.edit` | `requireLogin` | Form to edit item specifications |
-| **POST** | `/items/:id/update`| `itemController.update` | `requireLogin` | Update item & replace image file |
-| **POST** | `/items/:id/delete`| `itemController.destroy` | `requireLogin` | Delete item (HTML redirect or JSON if Ajax) |
+| **GET** | `/items/:id/edit` | `itemController.edit` | `requireAdmin` (Admin only) | Form to edit item specifications |
+| **POST** | `/items/:id/update`| `itemController.update` | `requireAdmin` (Admin only) | Update item & replace image file |
+| **POST** | `/items/:id/delete`| `itemController.destroy` | `requireAdmin` (Admin only) | Delete item (HTML redirect or JSON if Ajax) |
 | **GET** | `/suppliers` | `supplierController.index` | `requireLogin` | List all registered vendor suppliers |
-| **GET** | `/suppliers/new` | `supplierController.showCreate`| `requireLogin` | Form to register new supplier |
-| **POST** | `/suppliers` | `supplierController.store` | `requireLogin` | Save new supplier |
+| **GET** | `/suppliers/new` | `supplierController.showCreate`| `requireAdmin` (Admin only) | Form to register new supplier |
+| **POST** | `/suppliers` | `supplierController.store` | `requireAdmin` (Admin only) | Save new supplier |
 | **GET** | `/suppliers/:id` | `supplierController.show` | `requireLogin` | Supplier details & linked product catalog |
-| **GET** | `/suppliers/:id/edit`| `supplierController.edit` | `requireLogin` | Form to edit supplier details |
-| **POST** | `/suppliers/:id/update`| `supplierController.update`| `requireLogin` | Update supplier details |
-| **POST** | `/suppliers/:id/delete`| `supplierController.destroy`| `requireLogin` | Delete supplier (blocked if items linked) |
+| **GET** | `/suppliers/:id/edit`| `supplierController.edit` | `requireAdmin` (Admin only) | Form to edit supplier details |
+| **POST** | `/suppliers/:id/update`| `supplierController.update`| `requireAdmin` (Admin only) | Update supplier details |
+| **POST** | `/suppliers/:id/delete`| `supplierController.destroy`| `requireAdmin` (Admin only) | Delete supplier (blocked if items linked) |
 | **GET** | `/transactions` | `transactionController.index`| `requireLogin` | Full chronological audit trail of stock movements |
-| **GET** | `/transactions/new` | `transactionController.showCreate`| `requireLogin` | Form to record Stock IN or Stock OUT movement |
-| **POST** | `/transactions` | `transactionController.store`| `requireLogin` | Atomic stock update & audit record creation |
+| **GET** | `/transactions/new` | `transactionController.showCreate`| `requireLogin` | Form to record Stock IN (Admin) or Stock OUT (User & Admin) |
+| **POST** | `/transactions` | `transactionController.store`| `requireLogin` | Atomic stock update (`IN`: Admin only; `OUT`: All users) |
 | **GET** | `/api/items` | `apiController.searchItems` | `requireApiLogin` | JSON search (`?search=query`) by name/SKU/cat |
 | **GET** | `/api/items/:id` | `apiController.getItem` | `requireApiLogin` | JSON single item details for quick-view panel |
 | **GET** | `/api/stats` | `apiController.getStats` | `requireApiLogin` | JSON dashboard valuation & count statistics |

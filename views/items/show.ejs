@@ -11,10 +11,12 @@
       <div class="btn-group">
         <a href="/items" class="btn btn-outline">Back to Items</a>
         <a href="/transactions/new?item=<%= item._id %>" class="btn btn-success">+ Record Movement</a>
-        <a href="/items/<%= item._id %>/edit" class="btn btn-primary">Edit Item</a>
-        <form action="/items/<%= item._id %>/delete" method="POST" class="inline-form delete-form">
-          <button type="submit" class="btn btn-danger">Delete</button>
-        </form>
+        <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'admin') { %>
+          <a href="/items/<%= item._id %>/edit" class="btn btn-primary">Edit Item</a>
+          <form action="/items/<%= item._id %>/delete" method="POST" class="inline-form delete-form">
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+        <% } %>
       </div>
     </div>
 

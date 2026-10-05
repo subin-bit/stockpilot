@@ -4,29 +4,29 @@
 const express = require('express');
 const router = express.Router();
 const supplierController = require('../controllers/supplierController');
-const { requireLogin } = require('../middleware/auth');
+const { requireLogin, requireAdmin } = require('../middleware/auth');
 
 router.use(requireLogin);
 
-// 1. List suppliers
+// 1. List suppliers (accessible to all logged-in users)
 router.get('/', supplierController.index);
 
-// 2. Form to add new supplier (MUST be before /:id)
-router.get('/new', supplierController.showCreate);
+// 2. Form to add new supplier (Admin only)
+router.get('/new', requireAdmin, supplierController.showCreate);
 
-// 3. Save new supplier
-router.post('/', supplierController.store);
+// 3. Save new supplier (Admin only)
+router.post('/', requireAdmin, supplierController.store);
 
-// 4. View supplier details and linked items
+// 4. View supplier details and linked items (accessible to all logged-in users)
 router.get('/:id', supplierController.show);
 
-// 5. Form to edit supplier
-router.get('/:id/edit', supplierController.edit);
+// 5. Form to edit supplier (Admin only)
+router.get('/:id/edit', requireAdmin, supplierController.edit);
 
-// 6. Update supplier
-router.post('/:id/update', supplierController.update);
+// 6. Update supplier (Admin only)
+router.post('/:id/update', requireAdmin, supplierController.update);
 
-// 7. Delete supplier
-router.post('/:id/delete', supplierController.destroy);
+// 7. Delete supplier (Admin only)
+router.post('/:id/delete', requireAdmin, supplierController.destroy);
 
 module.exports = router;
