@@ -1,0 +1,83 @@
+<%- include('../partials/header', { title: 'Add Category — StockPilot' }) %>
+
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+
+  <div class="main-wrapper">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle-btn" id="sidebarToggle" aria-label="Open navigation menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title">Add Category</h1>
+          <p class="page-subtitle">Create a new category to group related items</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <a href="/categories" class="btn btn-secondary">
+          &larr; Back to Categories
+        </a>
+      </div>
+    </header>
+
+    <main class="page-container max-w-2xl">
+      <%- include('../partials/messages') %>
+
+      <% 
+        const values = (typeof formData !== 'undefined' && formData) ? formData : {};
+      %>
+
+      <div class="panel-card form-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Category Information</h2>
+        </div>
+
+        <form action="/categories" method="POST" class="form-body">
+          <div class="form-group">
+            <label for="name" class="form-label required">Category Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="form-control"
+              placeholder="e.g. Peripherals, Electronics, Furniture"
+              value="<%= values.name || '' %>"
+              required
+              autofocus
+            >
+            <span class="form-hint">Must be unique across all categories.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="form-label">Description (Optional)</label>
+            <textarea
+              id="description"
+              name="description"
+              class="form-control"
+              rows="3"
+              placeholder="Brief summary of items in this category..."
+            ><%= values.description || '' %></textarea>
+          </div>
+
+          <div class="form-actions">
+            <a href="/categories" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Save Category
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+  </div>
+</div>

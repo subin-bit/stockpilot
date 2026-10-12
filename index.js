@@ -4,10 +4,9 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-// connect-mongo v6 exports MongoStore as a named export
 const { MongoStore } = require('connect-mongo');
 const mongoose = require('mongoose');
-require('dotenv').config(); // Load .env variables into process.env
+require('dotenv').config();
 
 const app = express();
 
@@ -15,28 +14,14 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Trust reverse proxy (for Render, Heroku, Nginx HTTPS load balancers)
-app.set('trust proxy', 1);
-
 // ─── Body parsers ───────────────────────────────────────────────
-// Parse URL-encoded form data (extended: true allows nested objects)
 app.use(express.urlencoded({ extended: true }));
-// Parse JSON request bodies (used by Ajax endpoints in Phase 6)
 app.use(express.json());
-
-// ─── File upload middleware ─────────────────────────────────────
-// Registers express-fileupload for multipart forms (image uploads)
-const fileUpload = require('express-fileupload');
-app.use(fileUpload({
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB limit
-  abortOnLimit: false
-}));
 
 // ─── Static files ───────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Session middleware ─────────────────────────────────────────
-// connect-mongo stores sessions in MongoDB so they persist across restarts
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret',
   resave: false,
@@ -51,12 +36,10 @@ app.use(session({
 }));
 
 // ─── Flash messages middleware ──────────────────────────────────
-// Copies one-time messages from the session into res.locals for views
 const flash = require('./middleware/flash');
 app.use(flash);
 
 // ─── Global auth state ─────────────────────────────────────────
-// Makes currentUser available in every EJS view (null when logged out)
 const User = require('./models/User');
 app.use(async (req, res, next) => {
   res.locals.currentUser = null;
@@ -70,44 +53,36 @@ app.use(async (req, res, next) => {
       console.error('Error fetching user for session:', err.message);
     }
   }
+  // Make the current path available to views for sidebar active state
+  res.locals.currentPath = req.path;
   next();
 });
 
-// ─── Auth Middleware ────────────────────────────────────────────
-const { requireLogin } = require('./middleware/auth');
-
 // ─── Routes ─────────────────────────────────────────────────────
-// Auth routes (register, login, logout)
-app.use('/auth', require('./routes/authRoutes'));
-
-// Dashboard controller
+const { requireLogin } = require('./middleware/auth');
 const dashboardController = require('./controllers/dashboardController');
 
-// Home / dashboard route (protected by requireLogin)
+// Auth routes
+app.use('/auth', require('./routes/authRoutes'));
+
+// Dashboard (protected)
 app.get('/', requireLogin, dashboardController.index);
 
-// Items routes (CRUD)
-app.use('/items', require('./routes/itemRoutes'));
+// Products CRUD
+app.use('/products', require('./routes/productRoutes'));
 
-// Suppliers routes (CRUD)
-app.use('/suppliers', require('./routes/supplierRoutes'));
+// Categories CRUD
+app.use('/categories', require('./routes/categoryRoutes'));
 
-// Stock transactions routes
-app.use('/transactions', require('./routes/transactionRoutes'));
+// Stock management & history
+app.use('/stock', require('./routes/stockRoutes'));
 
-// ─── Phase 6: API & Ajax Partial Routes ─────────────────────────
-const { requireApiLogin } = require('./middleware/auth');
-const apiController = require('./controllers/apiController');
-app.use('/api', require('./routes/apiRoutes'));
-app.get('/partials/recent-transactions', requireApiLogin, apiController.recentTransactions);
-
-// ─── 404 handler (must be the LAST route) ───────────────────────
+// ─── 404 handler ────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).render('errors/404', { title: 'Page Not Found — StockPilot' });
 });
 
-// ─── 500 error-handling middleware ──────────────────────────────
-// Express calls this when next(err) is used; the 4 parameters tell Express it's an error handler
+// ─── 500 error handler ─────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);
   res.status(500).render('errors/500', { title: 'Server Error — StockPilot' });
@@ -117,7 +92,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 mongoose.connect(process.env.MONGO_URI, {
-    serverSelectionTimeoutMS: 5000 // fail fast if MongoDB isn't running
+    serverSelectionTimeoutMS: 5000
   })
   .then(() => {
     console.log('MongoDB connected');
@@ -127,5 +102,5 @@ mongoose.connect(process.env.MONGO_URI, {
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err.message);
-    process.exit(1); // Stop the app if DB is unreachable
+    process.exit(1);
   });

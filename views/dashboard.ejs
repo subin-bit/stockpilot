@@ -1,0 +1,271 @@
+<%- include('partials/header', { title: 'Dashboard — StockPilot' }) %>
+
+<div class="app-layout">
+  <%- include('partials/sidebar') %>
+
+  <div class="main-wrapper">
+    <!-- Top Bar -->
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle-btn" id="sidebarToggle" aria-label="Open navigation menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title">Dashboard Overview</h1>
+          <p class="page-subtitle">Real-time inventory levels, alerts, and operational insights</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <a href="/stock/manage" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m16 3 4 4-4 4"></path><path d="M20 7H4"></path><path d="m8 21-4-4 4-4"></path><path d="M4 17h16"></path>
+          </svg>
+          Quick Stock In/Out
+        </a>
+        <% if (currentUser && currentUser.role === 'admin') { %>
+          <a href="/products/new" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Product
+          </a>
+        <% } %>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="page-container">
+      <%- include('partials/messages') %>
+
+      <!-- Metric Cards Grid -->
+      <section class="metrics-grid">
+        <div class="stat-card">
+          <div class="stat-icon icon-blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+              <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+              <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+              <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+            </svg>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Total Products</span>
+            <span class="stat-value"><%= totalProducts.toLocaleString() %></span>
+            <span class="stat-trend">Catalog Items</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-cyan">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+              <polyline points="3.29 7 12 12 20.71 7"></polyline>
+              <line x1="12" y1="22" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Total Stock Units</span>
+            <span class="stat-value"><%= totalStock.toLocaleString() %></span>
+            <span class="stat-trend">Available in warehouse</span>
+          </div>
+        </div>
+
+        <div class="stat-card <%= lowStockCount > 0 ? 'card-warning-active' : '' %>">
+          <div class="stat-icon icon-warning">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Low Stock Alerts</span>
+            <span class="stat-value text-warning"><%= lowStockCount %></span>
+            <span class="stat-trend">Requires reordering</span>
+          </div>
+        </div>
+
+        <div class="stat-card <%= outOfStockCount > 0 ? 'card-danger-active' : '' %>">
+          <div class="stat-icon icon-danger">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+            </svg>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Out of Stock</span>
+            <span class="stat-value text-danger"><%= outOfStockCount %></span>
+            <span class="stat-trend">Zero stock remaining</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon icon-success">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Inventory Valuation</span>
+            <span class="stat-value text-success">$<%= inventoryValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+            <span class="stat-trend">Total holding value</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts Row -->
+      <section class="charts-grid">
+        <div class="panel-card chart-card">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Stock Volume by Category</h2>
+              <p class="panel-subtitle">Total units currently in warehouse per department</p>
+            </div>
+          </div>
+          <div class="panel-body chart-body">
+            <canvas id="categoryStockChart" height="240"></canvas>
+          </div>
+        </div>
+
+        <div class="panel-card chart-card">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Product Distribution</h2>
+              <p class="panel-subtitle">Catalog items grouped by category</p>
+            </div>
+          </div>
+          <div class="panel-body chart-body donut-chart-body">
+            <canvas id="categoryDistributionChart" height="240"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tables Row: Low Stock Items & Recent Transactions -->
+      <div class="dashboard-columns">
+        <!-- Low Stock Alerts -->
+        <section class="panel-card flex-2">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title flex-align">
+                <span class="status-indicator-dot warning"></span>
+                Stock Attention List
+              </h2>
+              <p class="panel-subtitle">Products at or below configured minimum reorder threshold</p>
+            </div>
+            <a href="/products" class="panel-link">View All Products &rarr;</a>
+          </div>
+          <div class="panel-body p-0">
+            <% if (lowStockProducts && lowStockProducts.length > 0) { %>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>SKU</th>
+                      <th>Category</th>
+                      <th class="text-right">Available</th>
+                      <th class="text-right">Min Level</th>
+                      <th class="text-center">Status</th>
+                      <th class="text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% lowStockProducts.forEach(prod => { %>
+                      <tr>
+                        <td>
+                          <a href="/products/<%= prod._id %>" class="item-link">
+                            <strong><%= prod.name %></strong>
+                          </a>
+                        </td>
+                        <td><code class="sku-tag"><%= prod.sku %></code></td>
+                        <td>
+                          <span class="cat-pill"><%= prod.category ? prod.category.name : 'Uncategorized' %></span>
+                        </td>
+                        <td class="text-right">
+                          <strong class="<%= prod.quantity === 0 ? 'text-danger' : 'text-warning' %>">
+                            <%= prod.quantity %>
+                          </strong>
+                        </td>
+                        <td class="text-right text-muted"><%= prod.minStock %></td>
+                        <td class="text-center">
+                          <span class="badge badge-<%= prod.quantity === 0 ? 'out' : 'low' %>">
+                            <%= prod.quantity === 0 ? 'Out of Stock' : 'Low Stock' %>
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <a href="/stock/manage?product=<%= prod._id %>&type=IN" class="btn btn-xs btn-outline-primary" title="Record incoming stock">
+                            + Restock
+                          </a>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="empty-state-sm">
+                <div class="empty-icon text-success">✓</div>
+                <h3>All Stock Healthy</h3>
+                <p>Every product is stocked above minimum required threshold levels.</p>
+              </div>
+            <% } %>
+          </div>
+        </section>
+
+        <!-- Recent Transactions -->
+        <section class="panel-card flex-1">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Recent Stock Activity</h2>
+              <p class="panel-subtitle">Latest inbound and outbound transactions</p>
+            </div>
+            <a href="/stock/history" class="panel-link">History &rarr;</a>
+          </div>
+          <div class="panel-body p-0">
+            <% if (recentTransactions && recentTransactions.length > 0) { %>
+              <ul class="activity-list">
+                <% recentTransactions.forEach(tx => { %>
+                  <li class="activity-item">
+                    <div class="activity-badge badge-<%= tx.type === 'IN' ? 'in' : 'out' %>">
+                      <%= tx.type === 'IN' ? '↓ IN' : '↑ OUT' %>
+                    </div>
+                    <div class="activity-details">
+                      <div class="activity-main">
+                        <span class="activity-title"><%= tx.product ? tx.product.name : 'Deleted Item' %></span>
+                        <span class="activity-delta <%= tx.type === 'IN' ? 'text-success' : 'text-danger' %>">
+                          <%= tx.type === 'IN' ? '+' : '-' %><%= tx.quantity %>
+                        </span>
+                      </div>
+                      <div class="activity-sub">
+                        <span><%= tx.user ? tx.user.name : 'System' %> &bull; <%= new Date(tx.createdAt).toLocaleDateString() %></span>
+                        <% if (tx.note) { %>
+                          <span class="activity-note" title="<%= tx.note %>">&ldquo;<%= tx.note %>&rdquo;</span>
+                        <% } %>
+                      </div>
+                    </div>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <div class="empty-state-sm">
+                <p class="text-muted">No stock operations recorded yet.</p>
+                <a href="/stock/manage" class="btn btn-sm btn-primary mt-2">Record First Movement</a>
+              </div>
+            <% } %>
+          </div>
+        </section>
+      </div>
+
+      <!-- Hidden data element for chart JS -->
+      <div id="dashboardChartData" data-charts='<%- stockByCategory %>' style="display:none;"></div>
+    </main>
+
+    <%- include('partials/footer') %>
+  </div>
+</div>

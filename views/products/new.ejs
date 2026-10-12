@@ -1,0 +1,149 @@
+<%- include('../partials/header', { title: 'Add Product — StockPilot' }) %>
+
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+
+  <div class="main-wrapper">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle-btn" id="sidebarToggle" aria-label="Open navigation menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title">Add New Product</h1>
+          <p class="page-subtitle">Register a new catalog item with SKU, category, and threshold settings</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <a href="/products" class="btn btn-secondary">
+          &larr; Back to Products
+        </a>
+      </div>
+    </header>
+
+    <main class="page-container max-w-4xl">
+      <%- include('../partials/messages') %>
+
+      <% 
+        const values = (typeof formData !== 'undefined' && formData) ? formData : {};
+      %>
+
+      <div class="panel-card form-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Product Details</h2>
+        </div>
+
+        <form action="/products" method="POST" class="form-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="name" class="form-label required">Product Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                class="form-control"
+                placeholder="e.g. Ergonomic Office Chair"
+                value="<%= values.name || '' %>"
+                required
+                autofocus
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="sku" class="form-label required">SKU (Stock Keeping Unit)</label>
+              <input
+                type="text"
+                id="sku"
+                name="sku"
+                class="form-control font-mono uppercase"
+                placeholder="e.g. CHR-ERG-01"
+                value="<%= values.sku || '' %>"
+                required
+              >
+              <span class="form-hint">Unique identifier, automatically converted to uppercase.</span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="category" class="form-label required">Category</label>
+              <div class="select-with-add">
+                <select id="category" name="category" class="form-control" required>
+                  <option value="">Select a Category...</option>
+                  <% categories.forEach(cat => { %>
+                    <option value="<%= cat._id %>" <%= (values.category && values.category.toString() === cat._id.toString()) ? 'selected' : '' %>>
+                      <%= cat.name %>
+                    </option>
+                  <% }) %>
+                </select>
+                <a href="/categories/new" class="btn btn-ghost btn-sm" title="Create new category" target="_blank">+ New</a>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="price" class="form-label required">Unit Price ($)</label>
+              <input
+                type="number"
+                id="price"
+                name="price"
+                class="form-control"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                value="<%= values.price || '' %>"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="quantity" class="form-label">Initial Stock Quantity</label>
+              <input
+                type="number"
+                id="quantity"
+                name="quantity"
+                class="form-control"
+                placeholder="0"
+                min="0"
+                value="<%= (values.quantity !== undefined) ? values.quantity : '0' %>"
+              >
+              <span class="form-hint">Current physical count in storage.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="minStock" class="form-label">Minimum Stock Alert Level</label>
+              <input
+                type="number"
+                id="minStock"
+                name="minStock"
+                class="form-control"
+                placeholder="5"
+                min="0"
+                value="<%= (values.minStock !== undefined) ? values.minStock : '5' %>"
+              >
+              <span class="form-hint">Triggers low-stock warning when quantity falls to or below this.</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <a href="/products" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Save Product
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+  </div>
+</div>

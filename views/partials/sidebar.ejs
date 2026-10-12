@@ -1,0 +1,116 @@
+<!-- views/partials/sidebar.ejs — App Sidebar Navigation -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="/" class="brand-link">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"></path>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+          <path d="m3.3 7 8.7 5 8.7-5"></path>
+          <path d="M12 22V12"></path>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">StockPilot</span>
+        <span class="brand-badge">MVP</span>
+      </div>
+    </a>
+    <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close menu">&times;</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Core Modules</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a href="/" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/' ? 'active' : '' %>">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+              <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+              <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+              <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+            </svg>
+          </span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="/products" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/products') ? 'active' : '' %>">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16.5 9.4 7.55 4.24"></path>
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+              <polyline points="3.29 7 12 12 20.71 7"></polyline>
+              <line x1="12" y1="22" x2="12" y2="12"></line>
+            </svg>
+          </span>
+          <span class="nav-label">Products</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="/categories" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/categories') ? 'active' : '' %>">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path>
+              <path d="M7 7h.01"></path>
+            </svg>
+          </span>
+          <span class="nav-label">Categories</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-section-label">Inventory Ops</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a href="/stock/manage" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/stock/manage' ? 'active' : '' %>">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m16 3 4 4-4 4"></path>
+              <path d="M20 7H4"></path>
+              <path d="m8 21-4-4 4-4"></path>
+              <path d="M4 17h16"></path>
+            </svg>
+          </span>
+          <span class="nav-label">Stock In / Out</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="/stock/history" class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/stock/history' ? 'active' : '' %>">
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </span>
+          <span class="nav-label">Stock History</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-brief">
+      <div class="user-avatar">
+        <%= currentUser && currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U' %>
+      </div>
+      <div class="user-info">
+        <span class="user-name"><%= currentUser ? currentUser.name : 'Account' %></span>
+        <span class="user-role-badge <%= currentUser && currentUser.role === 'admin' ? 'role-admin' : 'role-user' %>">
+          <%= currentUser && currentUser.role === 'admin' ? 'Administrator' : 'Staff User' %>
+        </span>
+      </div>
+    </div>
+    <a href="/auth/logout" class="logout-btn" title="Sign out" aria-label="Sign out">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+    </a>
+  </div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>

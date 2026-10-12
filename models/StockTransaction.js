@@ -1,13 +1,13 @@
-// models/StockTransaction.js — Stock movement transaction audit log
+// models/StockTransaction.js — Stock movement transaction log
 // Tracks inbound (Stock IN) and outbound (Stock OUT) quantity changes.
 
 const mongoose = require('mongoose');
 
 const stockTransactionSchema = new mongoose.Schema({
-  item: {
+  product: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Item',
-    required: [true, 'Item is required']
+    ref: 'Product',
+    required: [true, 'Product is required']
   },
   type: {
     type: String,

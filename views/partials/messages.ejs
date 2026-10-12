@@ -1,23 +1,40 @@
-<!-- Flash messages partial -->
-<!-- Displays one-time error and success messages set by controllers via the session -->
-<% if (errors && errors.length > 0) { %>
-  <div class="msg msg-error" id="flash-errors">
-    <button class="msg-close" aria-label="Close">&times;</button>
-    <% if (errors.length === 1) { %>
-      <p><%= errors[0] %></p>
-    <% } else { %>
-      <ul>
-        <% errors.forEach((err) => { %>
-          <li><%= err %></li>
-        <% }); %>
-      </ul>
-    <% } %>
+<!-- views/partials/messages.ejs — Alert & Flash Messages -->
+<% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+  <div class="alert alert-error" role="alert" id="flash-errors">
+    <div class="alert-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <div class="alert-content">
+      <% if (errors.length === 1) { %>
+        <p class="alert-title"><%= errors[0] %></p>
+      <% } else { %>
+        <p class="alert-title">Please review the following errors:</p>
+        <ul class="alert-list">
+          <% errors.forEach(err => { %>
+            <li><%= err %></li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </div>
+    <button class="alert-close" type="button" aria-label="Dismiss alert">&times;</button>
   </div>
 <% } %>
 
-<% if (success && success.length > 0) { %>
-  <div class="msg msg-success" id="flash-success">
-    <button class="msg-close" aria-label="Close">&times;</button>
-    <p><%= success %></p>
+<% if (typeof success !== 'undefined' && success && success.length > 0) { %>
+  <div class="alert alert-success" role="alert" id="flash-success">
+    <div class="alert-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
+    <div class="alert-content">
+      <p class="alert-title"><%= success %></p>
+    </div>
+    <button class="alert-close" type="button" aria-label="Dismiss alert">&times;</button>
   </div>
 <% } %>

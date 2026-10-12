@@ -1,17 +1,16 @@
-<%- include('../partials/header') %>
-<%- include('../partials/navbar') %>
+<%- include('../partials/header', { title: '500 — Server Error' }) %>
 
-<main class="main-content">
-  <div class="container">
-    <section class="error-page">
-      <div class="error-content">
-        <span class="error-code">500</span>
-        <h1>Server Error</h1>
-        <p>Something went wrong on our end. Please try again later.</p>
-        <a href="/" class="btn btn-primary">Back to Home</a>
-      </div>
-    </section>
+<div class="auth-layout">
+  <div class="auth-card text-center">
+    <div class="error-badge error-badge-red">500</div>
+    <h1 class="auth-title">Unexpected Server Error</h1>
+    <p class="auth-subtitle">Something went wrong while processing your request. Please try again.</p>
+    <div class="mt-4">
+      <a href="/" class="btn btn-primary btn-block">
+        Return to Dashboard
+      </a>
+    </div>
   </div>
-</main>
+</div>
 
 <%- include('../partials/footer') %>

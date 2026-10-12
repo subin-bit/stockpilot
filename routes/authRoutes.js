@@ -3,15 +3,17 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { redirectIfLoggedIn, requireLogin } = require('../middleware/auth');
+const { redirectIfLoggedIn } = require('../middleware/auth');
 
-// Guest-only routes (redirect to '/' if already authenticated)
-router.get('/register', redirectIfLoggedIn, authController.showRegister);
-router.post('/register', redirectIfLoggedIn, authController.register);
+// Login
 router.get('/login', redirectIfLoggedIn, authController.showLogin);
 router.post('/login', redirectIfLoggedIn, authController.login);
 
-// Authenticated route
-router.get('/logout', requireLogin, authController.logout);
+// Register
+router.get('/register', redirectIfLoggedIn, authController.showRegister);
+router.post('/register', redirectIfLoggedIn, authController.register);
+
+// Logout
+router.get('/logout', authController.logout);
 
 module.exports = router;

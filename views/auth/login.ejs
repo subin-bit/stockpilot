@@ -1,52 +1,73 @@
-<%- include('../partials/header') %>
-<%- include('../partials/navbar') %>
+<%- include('../partials/header', { title: 'Login — StockPilot' }) %>
 
-<main class="main-content">
-  <div class="container auth-wrapper">
-    <div class="auth-card">
-      <h1>Welcome Back</h1>
-      <p class="auth-subtitle">Sign in to access your StockPilot dashboard</p>
+<div class="auth-layout">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="brand-icon-lg">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"></path>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+          <path d="m3.3 7 8.7 5 8.7-5"></path>
+          <path d="M12 22V12"></path>
+        </svg>
+      </div>
+      <h1 class="auth-title">Welcome to StockPilot</h1>
+      <p class="auth-subtitle">Sign in to manage stock and inventory metrics</p>
+    </div>
 
-      <%- include('../partials/messages') %>
+    <%- include('../partials/messages') %>
 
-      <form action="/auth/login" method="POST" class="auth-form" id="login-form" novalidate>
-        <div class="form-group">
-          <label for="email" class="form-label">Email Address</label>
+    <form action="/auth/login" method="POST" class="form-stack" novalidate>
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <div class="input-icon-wrapper">
           <input
             type="email"
             id="email"
             name="email"
             class="form-control"
-            placeholder="you@example.com"
-            value="<%= typeof old !== 'undefined' && old.email ? old.email : '' %>"
+            placeholder="admin@stockpilot.io"
+            value="<%= typeof formData !== 'undefined' && formData && formData.email ? formData.email : '' %>"
             required
             autocomplete="email"
+            autofocus
           >
         </div>
+      </div>
 
-        <div class="form-group">
+      <div class="form-group">
+        <div class="label-row">
           <label for="password" class="form-label">Password</label>
+        </div>
+        <div class="input-icon-wrapper">
           <input
             type="password"
             id="password"
             name="password"
             class="form-control"
-            placeholder="Your password"
+            placeholder="••••••••"
             required
             autocomplete="current-password"
           >
         </div>
+      </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--sp-md);">
-          Sign In
-        </button>
-      </form>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        Sign In to Dashboard
+      </button>
 
-      <p class="auth-footer">
-        Don't have an account? <a href="/auth/register">Register now</a>
-      </p>
+      <div class="auth-demo-hint">
+        <div class="demo-badge">Demo Credentials</div>
+        <p><strong>Admin:</strong> admin@stockpilot.io &bull; <code>password123</code></p>
+        <p><strong>Staff:</strong> user@stockpilot.io &bull; <code>password123</code></p>
+      </div>
+    </form>
+
+    <div class="auth-footer-nav">
+      <span>Don't have an account yet?</span>
+      <a href="/auth/register" class="link-highlight">Create an account</a>
     </div>
   </div>
-</main>
+</div>
 
 <%- include('../partials/footer') %>

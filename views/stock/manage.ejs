@@ -1,0 +1,176 @@
+<%- include('../partials/header', { title: 'Stock Management — StockPilot' }) %>
+
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+
+  <div class="main-wrapper">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle-btn" id="sidebarToggle" aria-label="Open navigation menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title">Stock In / Stock Out</h1>
+          <p class="page-subtitle">Record stock adjustments, replenishment deliveries, or order dispatches</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <a href="/stock/history" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          View Transaction History
+        </a>
+      </div>
+    </header>
+
+    <main class="page-container max-w-4xl">
+      <%- include('../partials/messages') %>
+
+      <% 
+        const values = (typeof formData !== 'undefined' && formData) ? formData : {};
+      %>
+
+      <div class="panel-card form-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Record Stock Movement</h2>
+          <p class="panel-subtitle">Every operation is recorded in the immutable audit trail</p>
+        </div>
+
+        <form action="/stock/manage" method="POST" class="form-body" id="stockMovementForm">
+          <!-- Step 1: Select Product -->
+          <div class="form-group">
+            <label for="productSelect" class="form-label required">Select Product</label>
+            <select id="productSelect" name="product" class="form-control" required autofocus>
+              <option value="">Choose an inventory item...</option>
+              <% products.forEach(prod => { %>
+                <% const isSelected = values.product && values.product.toString() === prod._id.toString(); %>
+                <option
+                  value="<%= prod._id %>"
+                  data-stock="<%= prod.quantity %>"
+                  data-sku="<%= prod.sku %>"
+                  data-min="<%= prod.minStock %>"
+                  <%= isSelected ? 'selected' : '' %>
+                >
+                  <%= prod.name %> (<%= prod.sku %>) &mdash; Current Stock: <%= prod.quantity %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Step 2: Choose Transaction Type (IN vs OUT) -->
+          <div class="form-group">
+            <label class="form-label required">Operation Type</label>
+            <div class="segmented-control">
+              <label class="segment-option">
+                <input
+                  type="radio"
+                  name="type"
+                  value="IN"
+                  <%= (!values.type || values.type === 'IN') ? 'checked' : '' %>
+                  id="typeIn"
+                >
+                <span class="segment-label segment-in">
+                  <span class="segment-icon">↓</span>
+                  <strong>Stock IN</strong>
+                  <small>Receiving / Purchase / Restock</small>
+                </span>
+              </label>
+
+              <label class="segment-option">
+                <input
+                  type="radio"
+                  name="type"
+                  value="OUT"
+                  <%= (values.type === 'OUT') ? 'checked' : '' %>
+                  id="typeOut"
+                >
+                <span class="segment-label segment-out">
+                  <span class="segment-icon">↑</span>
+                  <strong>Stock OUT</strong>
+                  <small>Dispatch / Order / Write-off</small>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Step 3: Quantity with quick selectors -->
+          <div class="form-group">
+            <label for="stockQty" class="form-label required">Quantity</label>
+            <div class="quantity-input-group">
+              <input
+                type="number"
+                id="stockQty"
+                name="quantity"
+                class="form-control input-lg font-mono font-bold"
+                placeholder="Enter quantity"
+                min="1"
+                value="<%= values.quantity || '1' %>"
+                required
+              >
+              <div class="quick-qty-buttons">
+                <button type="button" class="btn btn-xs btn-ghost qty-quick" data-add="1">+1</button>
+                <button type="button" class="btn btn-xs btn-ghost qty-quick" data-add="5">+5</button>
+                <button type="button" class="btn btn-xs btn-ghost qty-quick" data-add="10">+10</button>
+                <button type="button" class="btn btn-xs btn-ghost qty-quick" data-add="25">+25</button>
+              </div>
+            </div>
+            <span class="form-hint" id="availableStockHint">Select a product to view stock limitations.</span>
+          </div>
+
+          <!-- Step 4: Optional Note / Reference -->
+          <div class="form-group">
+            <label for="note" class="form-label">Note / Reference (Optional)</label>
+            <input
+              type="text"
+              id="note"
+              name="note"
+              class="form-control"
+              placeholder="e.g. PO-8831, Order #1209, Damaged inventory return"
+              value="<%= values.note || '' %>"
+            >
+          </div>
+
+          <!-- Interactive Live Calculation Preview Card -->
+          <div class="preview-card" id="calculationPreview" style="display: none;">
+            <div class="preview-header">
+              <span class="preview-title">Impact Summary</span>
+              <span class="badge" id="previewBadge">Stock IN</span>
+            </div>
+            <div class="preview-stats">
+              <div class="preview-stat">
+                <span class="stat-meta">Current Stock</span>
+                <span class="stat-num" id="previewCurrentStock">0</span>
+              </div>
+              <div class="preview-math" id="previewMathSymbol">+</div>
+              <div class="preview-stat">
+                <span class="stat-meta">Change</span>
+                <span class="stat-num text-highlight" id="previewDelta">0</span>
+              </div>
+              <div class="preview-math">=</div>
+              <div class="preview-stat">
+                <span class="stat-meta">New Projected Stock</span>
+                <span class="stat-num font-bold" id="previewResultStock">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <a href="/" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-lg" id="submitStockBtn">
+              Confirm &amp; Record Movement
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+  </div>
+</div>

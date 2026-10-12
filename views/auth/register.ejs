@@ -1,68 +1,77 @@
-<%- include('../partials/header') %>
-<%- include('../partials/navbar') %>
+<%- include('../partials/header', { title: 'Register — StockPilot' }) %>
 
-<main class="main-content">
-  <div class="container auth-wrapper">
-    <div class="auth-card">
-      <h1>Create an Account</h1>
-      <p class="auth-subtitle">Sign up to manage your inventory with StockPilot</p>
+<div class="auth-layout">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="brand-icon-lg">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"></path>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
+          <path d="m3.3 7 8.7 5 8.7-5"></path>
+          <path d="M12 22V12"></path>
+        </svg>
+      </div>
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Join StockPilot to track your team's inventory</p>
+    </div>
 
-      <%- include('../partials/messages') %>
+    <%- include('../partials/messages') %>
 
-      <form action="/auth/register" method="POST" class="auth-form" id="register-form" novalidate>
-        <div class="form-group">
-          <label for="name" class="form-label">Full Name</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            class="form-control"
-            placeholder="e.g. Jane Doe"
-            value="<%= typeof old !== 'undefined' && old.name ? old.name : '' %>"
-            required
-            autocomplete="name"
-          >
-        </div>
+    <form action="/auth/register" method="POST" class="form-stack" novalidate>
+      <div class="form-group">
+        <label for="name" class="form-label">Full Name</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          class="form-control"
+          placeholder="Jane Doe"
+          value="<%= typeof formData !== 'undefined' && formData && formData.name ? formData.name : '' %>"
+          required
+          autocomplete="name"
+          autofocus
+        >
+      </div>
 
-        <div class="form-group">
-          <label for="email" class="form-label">Email Address</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            class="form-control"
-            placeholder="you@example.com"
-            value="<%= typeof old !== 'undefined' && old.email ? old.email : '' %>"
-            required
-            autocomplete="email"
-          >
-        </div>
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          class="form-control"
+          placeholder="jane@example.com"
+          value="<%= typeof formData !== 'undefined' && formData && formData.email ? formData.email : '' %>"
+          required
+          autocomplete="email"
+        >
+      </div>
 
-        <div class="form-group">
-          <label for="password" class="form-label">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            class="form-control"
-            placeholder="Minimum 6 characters"
-            required
-            minlength="6"
-            autocomplete="new-password"
-          >
-          <p class="form-hint">Must be at least 6 characters long.</p>
-        </div>
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          class="form-control"
+          placeholder="At least 6 characters"
+          required
+          minlength="6"
+          autocomplete="new-password"
+        >
+        <span class="form-hint">Must be at least 6 characters.</span>
+      </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--sp-md);">
-          Create Account
-        </button>
-      </form>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        Create My Account
+      </button>
+    </form>
 
-      <p class="auth-footer">
-        Already have an account? <a href="/auth/login">Log in here</a>
-      </p>
+    <div class="auth-footer-nav">
+      <span>Already have an account?</span>
+      <a href="/auth/login" class="link-highlight">Sign in here</a>
     </div>
   </div>
-</main>
+</div>
 
 <%- include('../partials/footer') %>

@@ -1,0 +1,117 @@
+<%- include('../partials/header', { title: 'Categories — StockPilot' }) %>
+
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+
+  <div class="main-wrapper">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle-btn" id="sidebarToggle" aria-label="Open navigation menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title">Categories</h1>
+          <p class="page-subtitle">Organize and group inventory products by category</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <% if (currentUser && currentUser.role === 'admin') { %>
+          <a href="/categories/new" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add New Category
+          </a>
+        <% } %>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <%- include('../partials/messages') %>
+
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="flex-align gap-2">
+            <h2 class="panel-title">All Categories</h2>
+            <span class="count-pill"><%= categories.length %> total</span>
+          </div>
+        </div>
+
+        <div class="panel-body p-0">
+          <% if (categories && categories.length > 0) { %>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th class="text-center">Products Count</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% categories.forEach(cat => { %>
+                    <% const prodCount = (countMap && countMap[cat._id.toString()]) || 0; %>
+                    <tr>
+                      <td>
+                        <div class="flex-align gap-2">
+                          <span class="category-icon-box">🏷️</span>
+                          <a href="/products?category=<%= cat._id %>" class="item-link">
+                            <strong><%= cat.name %></strong>
+                          </a>
+                        </div>
+                      </td>
+                      <td class="text-muted">
+                        <%= cat.description || 'No description provided' %>
+                      </td>
+                      <td class="text-center">
+                        <a href="/products?category=<%= cat._id %>" class="badge-link" title="Filter products in this category">
+                          <span class="badge badge-primary">
+                            <%= prodCount %> <%= prodCount === 1 ? 'item' : 'items' %>
+                          </span>
+                        </a>
+                      </td>
+                      <td class="text-right actions-cell">
+                        <div class="action-buttons">
+                          <a href="/products?category=<%= cat._id %>" class="btn btn-xs btn-ghost" title="View products">
+                            View Items
+                          </a>
+                          <% if (currentUser && currentUser.role === 'admin') { %>
+                            <a href="/categories/<%= cat._id %>/edit" class="btn btn-xs btn-ghost" title="Edit category">
+                              Edit
+                            </a>
+                            <form action="/categories/<%= cat._id %>/delete" method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete <%= cat.name %>?');">
+                              <button type="submit" class="btn btn-xs btn-ghost text-danger" title="Delete category">
+                                Delete
+                              </button>
+                            </form>
+                          <% } %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="empty-state">
+              <div class="empty-icon">🏷️</div>
+              <h3>No Categories Yet</h3>
+              <p>Create categories to group and organize your inventory products.</p>
+              <% if (currentUser && currentUser.role === 'admin') { %>
+                <a href="/categories/new" class="btn btn-primary mt-2">Add First Category</a>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+  </div>
+</div>

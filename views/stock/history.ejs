@@ -1,0 +1,130 @@
+<%- include('../partials/header', { title: 'Stock History — StockPilot' }) %>
+
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+
+  <div class="main-wrapper">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle-btn" id="sidebarToggle" aria-label="Open navigation menu">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div>
+          <h1 class="page-title">Stock History &amp; Audit Log</h1>
+          <p class="page-subtitle">Complete chronological ledger of all inventory transactions</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <a href="/stock/manage" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m16 3 4 4-4 4"></path><path d="M20 7H4"></path><path d="m8 21-4-4 4-4"></path><path d="M4 17h16"></path>
+          </svg>
+          Record Movement
+        </a>
+      </div>
+    </header>
+
+    <main class="page-container">
+      <%- include('../partials/messages') %>
+
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="flex-align gap-2">
+            <h2 class="panel-title">Transaction Ledger</h2>
+            <span class="count-pill"><%= transactions.length %> events logged</span>
+          </div>
+
+          <div class="panel-actions">
+            <!-- Client-side filter input -->
+            <div class="table-search-input">
+              <input
+                type="text"
+                id="ledgerSearch"
+                placeholder="Filter by product, SKU, user, note..."
+                class="form-control form-control-sm"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-body p-0">
+          <% if (transactions && transactions.length > 0) { %>
+            <div class="table-responsive">
+              <table class="data-table" id="ledgerTable">
+                <thead>
+                  <tr>
+                    <th>Date &amp; Time</th>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th class="text-center">Type</th>
+                    <th class="text-right">Quantity</th>
+                    <th>Logged By</th>
+                    <th>Note / Reference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% transactions.forEach(tx => { %>
+                    <tr>
+                      <td class="font-mono text-muted text-sm whitespace-nowrap">
+                        <%= new Date(tx.createdAt).toLocaleDateString() %>
+                        <span class="text-xs text-muted-dim"><%= new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                      </td>
+                      <td>
+                        <% if (tx.product) { %>
+                          <a href="/products/<%= tx.product._id %>" class="item-link">
+                            <strong><%= tx.product.name %></strong>
+                          </a>
+                        <% } else { %>
+                          <span class="text-muted italic">Archived / Deleted Item</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (tx.product && tx.product.sku) { %>
+                          <code class="sku-tag"><%= tx.product.sku %></code>
+                        <% } else { %>
+                          <span class="text-muted">—</span>
+                        <% } %>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge badge-<%= tx.type === 'IN' ? 'in' : 'out' %>">
+                          <%= tx.type === 'IN' ? '↓ Stock IN' : '↑ Stock OUT' %>
+                        </span>
+                      </td>
+                      <td class="text-right font-mono">
+                        <strong class="<%= tx.type === 'IN' ? 'text-success' : 'text-danger' %>">
+                          <%= tx.type === 'IN' ? '+' : '-' %><%= tx.quantity.toLocaleString() %>
+                        </strong>
+                      </td>
+                      <td>
+                        <span class="user-pill">
+                          <%= tx.user ? tx.user.name : 'System / Auto' %>
+                        </span>
+                      </td>
+                      <td class="text-muted text-sm">
+                        <%= tx.note || '—' %>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="empty-state">
+              <div class="empty-icon">📜</div>
+              <h3>No Stock Operations Recorded</h3>
+              <p>When products are received or dispatched, transaction entries will appear here.</p>
+              <a href="/stock/manage" class="btn btn-primary mt-2">Record First Movement</a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+  </div>
+</div>

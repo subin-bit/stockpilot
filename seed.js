@@ -1,4 +1,4 @@
-// seed.js — Database Seed Script for StockPilot
+// seed.js — Database Seed Script for StockPilot MVP
 // Usage: npm run seed
 
 'use strict';
@@ -6,13 +6,13 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('./models/User');
-const Supplier = require('./models/Supplier');
-const Item = require('./models/Item');
+const Category = require('./models/Category');
+const Product = require('./models/Product');
 const StockTransaction = require('./models/StockTransaction');
 
 const seedDatabase = async () => {
   console.log('====================================================');
-  console.log('🌱 Starting StockPilot Database Seeder...');
+  console.log('🌱 Starting StockPilot MVP Database Seeder...');
   console.log('====================================================');
 
   if (!process.env.MONGO_URI) {
@@ -28,21 +28,20 @@ const seedDatabase = async () => {
     console.log('→ Clearing existing data collections...');
     await Promise.all([
       User.deleteMany({}),
-      Supplier.deleteMany({}),
-      Item.deleteMany({}),
+      Category.deleteMany({}),
+      Product.deleteMany({}),
       StockTransaction.deleteMany({})
     ]);
-    console.log('✓ Cleared Users, Suppliers, Items, and StockTransactions');
+    console.log('✓ Cleared Users, Categories, Products, and StockTransactions');
 
     // 2. Create Default Accounts (Admin & Standard User)
-    console.log('→ Creating default accounts (Admin and Standard User)...');
+    console.log('→ Creating default accounts (Admin and Staff User)...');
     const adminUser = await User.create({
       name: 'System Admin',
       email: 'admin@stockpilot.io',
       password: 'password123',
       role: 'admin'
     });
-    console.log(`✓ Admin created: ${adminUser.email} (Password: password123, Role: admin)`);
 
     const standardUser = await User.create({
       name: 'Warehouse Operator',
@@ -50,225 +49,188 @@ const seedDatabase = async () => {
       password: 'password123',
       role: 'user'
     });
-    console.log(`✓ User created:  ${standardUser.email} (Password: password123, Role: user)`);
+    console.log(`✓ Admin created: ${adminUser.email} (Password: password123, Role: admin)`);
+    console.log(`✓ Staff created: ${standardUser.email} (Password: password123, Role: user)`);
 
-    // 3. Create Suppliers
-    console.log('→ Creating suppliers...');
-    const suppliers = await Supplier.insertMany([
-      {
-        name: 'Apex Logistics & Hardware',
-        email: 'supply@apexlogistics.com',
-        phone: '+1 (312) 555-0192',
-        address: '100 Industrial Pkwy, Chicago, IL 60607'
-      },
-      {
-        name: 'NexGen Component Supply',
-        email: 'orders@nexgensupply.io',
-        phone: '+1 (512) 555-0144',
-        address: '404 Silicon Blvd, Suite 200, Austin, TX 78701'
-      },
-      {
-        name: 'Global Office & Workspace Solutions',
-        email: 'accounts@globaloffice.com',
-        phone: '+1 (617) 555-0178',
-        address: '12 Commercial Way, Boston, MA 02110'
-      }
+    // 3. Create Categories
+    console.log('→ Creating product categories...');
+    const categories = await Category.insertMany([
+      { name: 'Electronics', description: 'Computing devices, printers, and barcode peripherals' },
+      { name: 'Office Supplies', description: 'Paper reams, stationery, and desk accessories' },
+      { name: 'Furniture', description: 'Ergonomic chairs, electric standing desks, and storage' },
+      { name: 'Packaging', description: 'Carton boxes, protective bubble cushioning, and mailers' },
+      { name: 'Networking', description: 'Ethernet cables, gigabit switches, and server patch cords' }
     ]);
-    console.log(`✓ Seeded ${suppliers.length} suppliers`);
+    console.log(`✓ Created ${categories.length} categories`);
 
-    // Map supplier IDs for convenience
-    const [apex, nexgen, globalOffice] = suppliers;
+    const [electronics, office, furniture, packaging, networking] = categories;
 
-    // 4. Create Items across categories (including 4 low-stock items)
-    console.log('→ Creating inventory catalog items...');
-    const itemsData = [
+    // 4. Create Products
+    console.log('→ Creating catalog products (in-stock, low-stock, and out-of-stock)...');
+    const productsData = [
       {
         name: 'Mechanical Gaming Keyboard',
         sku: 'KB-MECH-01',
-        category: 'Electronics',
-        unitPrice: 89.99,
+        category: electronics._id,
+        price: 89.99,
         quantity: 2,
-        reorderLevel: 5,
-        supplier: nexgen._id,
-        createdBy: adminUser._id,
-        description: '<p>Professional mechanical keyboard equipped with tactile blue switches and per-key RGB backlighting.</p>'
-      },
-      {
-        name: 'Ergonomic Vertical Mouse',
-        sku: 'MS-VERT-02',
-        category: 'Peripherals',
-        unitPrice: 34.50,
-        quantity: 1,
-        reorderLevel: 4,
-        supplier: nexgen._id,
-        createdBy: adminUser._id,
-        description: '<p>Handshake-grip ergonomic mouse designed to minimize wrist strain and repetitive stress during long shifts.</p>'
+        minStock: 5,
+        createdBy: adminUser._id
       },
       {
         name: 'Thermal Receipt & Label Printer',
         sku: 'PR-THERM-03',
-        category: 'Electronics',
-        unitPrice: 129.00,
+        category: electronics._id,
+        price: 129.00,
         quantity: 0,
-        reorderLevel: 3,
-        supplier: apex._id,
-        createdBy: adminUser._id,
-        description: '<p>High-speed direct thermal barcode and shipping label printer compatible with standard 4x6 labels.</p>'
+        minStock: 3,
+        createdBy: adminUser._id
+      },
+      {
+        name: 'Ergonomic Vertical Mouse',
+        sku: 'MS-VERT-02',
+        category: electronics._id,
+        price: 34.50,
+        quantity: 1,
+        minStock: 4,
+        createdBy: adminUser._id
       },
       {
         name: 'Dual-Motor Electric Standing Desk',
         sku: 'DSK-STAND-04',
-        category: 'Furniture',
-        unitPrice: 399.00,
-        quantity: 6,
-        reorderLevel: 2,
-        supplier: globalOffice._id,
-        createdBy: adminUser._id,
-        description: '<p>Adjustable height standing desk with dual synchronous motors, memory presets, and anti-collision sensor.</p>'
+        category: furniture._id,
+        price: 399.00,
+        quantity: 8,
+        minStock: 2,
+        createdBy: adminUser._id
       },
       {
         name: 'Ergonomic Breathable Mesh Chair',
         sku: 'CHR-MESH-05',
-        category: 'Furniture',
-        unitPrice: 199.99,
-        quantity: 12,
-        reorderLevel: 4,
-        supplier: globalOffice._id,
-        createdBy: adminUser._id,
-        description: '<p>High-back ergonomic mesh office chair with adjustable 3D armrests and dynamic lumbar support.</p>'
+        category: furniture._id,
+        price: 199.99,
+        quantity: 14,
+        minStock: 4,
+        createdBy: adminUser._id
       },
       {
         name: 'Heavy-Duty Bubble Cushioning 500m',
         sku: 'PKG-BUB-06',
-        category: 'Packaging',
-        unitPrice: 42.00,
+        category: packaging._id,
+        price: 42.00,
         quantity: 25,
-        reorderLevel: 10,
-        supplier: apex._id,
-        createdBy: adminUser._id,
-        description: '<p>Cross-perforated protective bubble cushioning rolls suitable for fragile product packaging and freight dispatch.</p>'
+        minStock: 10,
+        createdBy: adminUser._id
       },
       {
         name: 'Corrugated Shipping Boxes (Pack of 50)',
         sku: 'PKG-BOX-07',
-        category: 'Packaging',
-        unitPrice: 55.00,
+        category: packaging._id,
+        price: 55.00,
         quantity: 3,
-        reorderLevel: 8,
-        supplier: apex._id,
-        createdBy: adminUser._id,
-        description: '<p>Standard size corrugated cardboard cartons tested for 200 lb burst strength.</p>'
-      },
-      {
-        name: 'Smooth Gel Ink Pens 0.7mm (Box of 24)',
-        sku: 'OFC-PEN-08',
-        category: 'Office Supplies',
-        unitPrice: 18.50,
-        quantity: 60,
-        reorderLevel: 15,
-        supplier: globalOffice._id,
-        createdBy: adminUser._id,
-        description: '<p>Quick-drying, smear-resistant black gel pens designed for warehouse documentation and paperwork.</p>'
+        minStock: 8,
+        createdBy: adminUser._id
       },
       {
         name: 'Multi-Purpose Copy Paper 20lb (5 Reams)',
         sku: 'OFC-PPR-09',
-        category: 'Office Supplies',
-        unitPrice: 32.00,
+        category: office._id,
+        price: 32.00,
         quantity: 45,
-        reorderLevel: 12,
-        supplier: globalOffice._id,
-        createdBy: adminUser._id,
-        description: '<p>Acid-free 92 brightness multi-purpose copy and printer paper for invoices and packaging slips.</p>'
+        minStock: 12,
+        createdBy: adminUser._id
       },
       {
-        name: 'USB-C Multiport Adapter 8-in-1 Hub',
+        name: 'Smooth Gel Ink Pens (Pack of 24)',
+        sku: 'OFC-PEN-08',
+        category: office._id,
+        price: 18.50,
+        quantity: 50,
+        minStock: 15,
+        createdBy: adminUser._id
+      },
+      {
+        name: 'USB-C Multiport 8-in-1 Hub',
         sku: 'HUB-USBC-10',
-        category: 'Peripherals',
-        unitPrice: 49.99,
+        category: electronics._id,
+        price: 49.99,
         quantity: 16,
-        reorderLevel: 5,
-        supplier: nexgen._id,
-        createdBy: adminUser._id,
-        description: '<p>Aluminum multiport adapter featuring 4K HDMI, Gigabit Ethernet, 100W Power Delivery, and USB 3.0 ports.</p>'
+        minStock: 5,
+        createdBy: adminUser._id
       },
       {
-        name: 'Wireless 2D Handheld Barcode Scanner',
-        sku: 'SCN-BAR-11',
-        category: 'Electronics',
-        unitPrice: 79.50,
-        quantity: 14,
-        reorderLevel: 5,
-        supplier: apex._id,
-        createdBy: adminUser._id,
-        description: '<p>Bluetooth and 2.4GHz wireless barcode reader capable of scanning damaged or reflective 1D/2D codes.</p>'
+        name: 'Cat6 Shielded Patch Cable 50ft',
+        sku: 'NET-CAT6-12',
+        category: networking._id,
+        price: 19.99,
+        quantity: 35,
+        minStock: 8,
+        createdBy: adminUser._id
       },
       {
-        name: 'Noise-Cancelling Wireless Headset',
-        sku: 'AUD-HDST-12',
-        category: 'Electronics',
-        unitPrice: 119.00,
-        quantity: 8,
-        reorderLevel: 4,
-        supplier: nexgen._id,
-        createdBy: adminUser._id,
-        description: '<p>Comfortable over-ear headset with AI-powered background noise cancellation microphone for dispatch calls.</p>'
+        name: '24-Port Gigabit Managed Switch',
+        sku: 'NET-SW24-13',
+        category: networking._id,
+        price: 189.00,
+        quantity: 6,
+        minStock: 2,
+        createdBy: adminUser._id
       }
     ];
 
-    const createdItems = await Item.insertMany(itemsData);
-    console.log(`✓ Seeded ${createdItems.length} inventory items (4 low-stock / critical)`);
+    const createdProducts = await Product.insertMany(productsData);
+    console.log(`✓ Seeded ${createdProducts.length} inventory products`);
 
-    // 5. Create Realistic Initial Stock Transactions
-    console.log('→ Recording audit stock movement transactions...');
+    // 5. Create Initial Stock Movement Transactions
+    console.log('→ Logging initial audit stock movements...');
     const transactionsData = [
       {
-        item: createdItems[0]._id, // Mechanical Keyboard
+        product: createdProducts[0]._id, // Keyboard
         type: 'IN',
         quantity: 10,
-        note: 'Initial vendor receiving PO-1001',
+        note: 'Initial procurement delivery PO-1001',
         user: adminUser._id,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48) // 2 days ago
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48)
       },
       {
-        item: createdItems[0]._id, // Mechanical Keyboard
+        product: createdProducts[0]._id, // Keyboard
         type: 'OUT',
         quantity: 8,
         note: 'Customer order shipment SO-5520',
-        user: adminUser._id,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
+        user: standardUser._id,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24)
       },
       {
-        item: createdItems[1]._id, // Vertical Mouse
+        product: createdProducts[2]._id, // Mouse
         type: 'IN',
         quantity: 5,
-        note: 'Bulk restocking batch',
+        note: 'Batch replenishment receiving dock',
         user: adminUser._id,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 18)
       },
       {
-        item: createdItems[1]._id, // Vertical Mouse
+        product: createdProducts[2]._id, // Mouse
         type: 'OUT',
         quantity: 4,
-        note: 'Direct office hardware dispatch',
-        user: adminUser._id,
+        note: 'Internal hardware provisioning',
+        user: standardUser._id,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12)
       },
       {
-        item: createdItems[3]._id, // Standing Desk
+        product: createdProducts[3]._id, // Desk
         type: 'IN',
-        quantity: 6,
-        note: 'Container delivery receiving dock B',
+        quantity: 8,
+        note: 'Freight container delivery dock B',
         user: adminUser._id,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6)
       },
       {
-        item: createdItems[6]._id, // Corrugated Shipping Boxes
+        product: createdProducts[6]._id, // Shipping Boxes
         type: 'OUT',
-        quantity: 12,
-        note: 'Warehouse packout consumption',
-        user: adminUser._id,
-        createdAt: new Date(Date.now() - 1000 * 60 * 30) // 30 mins ago
+        quantity: 15,
+        note: 'Dispatch fulfillment packing usage',
+        user: standardUser._id,
+        createdAt: new Date(Date.now() - 1000 * 60 * 30)
       }
     ];
 
@@ -276,15 +238,16 @@ const seedDatabase = async () => {
     console.log(`✓ Seeded ${createdTransactions.length} stock transactions`);
 
     console.log('====================================================');
-    console.log('✅ StockPilot Database Seeded Successfully!');
+    console.log('✅ StockPilot MVP Database Seeded Successfully!');
     console.log('====================================================');
-    console.log('🔑 Login Credentials:');
-    console.log('   👑 ADMIN (Full Rights):   Email: admin@stockpilot.io | Password: password123');
-    console.log('   👤 USER  (Update Stock):  Email: user@stockpilot.io  | Password: password123');
-    console.log('📦 Total Items:        ', createdItems.length);
-    console.log('⚠️ Low-Stock Items:    ', createdItems.filter(i => i.quantity <= i.reorderLevel).length);
-    console.log('🏭 Total Suppliers:    ', suppliers.length);
-    console.log('🔄 Total Transactions: ', createdTransactions.length);
+    console.log('🔑 Demo Credentials:');
+    console.log('   👑 Admin: admin@stockpilot.io | Password: password123');
+    console.log('   👤 Staff: user@stockpilot.io  | Password: password123');
+    console.log('📦 Total Products:     ', createdProducts.length);
+    console.log('🏷️ Categories:         ', categories.length);
+    console.log('⚠️ Low-Stock Items:    ', createdProducts.filter(p => p.quantity <= p.minStock && p.quantity > 0).length);
+    console.log('🚫 Out-of-Stock Items: ', createdProducts.filter(p => p.quantity === 0).length);
+    console.log('🔄 Transactions:       ', createdTransactions.length);
     console.log('====================================================');
 
     await mongoose.connection.close();
